@@ -3,6 +3,7 @@ module github.com/lidenger/otpserver
 go 1.20
 
 require (
+	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
