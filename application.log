@@ -1,0 +1,11 @@
+2024-03-04 15:03:56	info	log/config.go:30	日志配置成功:
+{"level":"info","time":"2024-03-04 15:04:34","caller":"log/config.go:29","msg":"日志配置成功:"}
+{"level":"info","time":"2024-03-04 15:05:34","caller":"log/config.go:29","func":"github.com/lidenger/otpserver/config/log.InitLog","msg":"日志配置成功:"}
+{"level":"info","time":"2024-03-04 15:06:19","caller":"log/config.go:29","func":"github.com/lidenger/otpserver/config/log.InitLog","msg":"日志配置成功:"}
+{"level":"info","time":"2024-03-04 15:13:43","caller":"log/config.go:35","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成%!(EXTRA []interface {}=[])"}
+{"level":"info","time":"2024-03-04 15:14:24","caller":"log/config.go:35","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成%!(EXTRA []interface {}=[])"}
+{"level":"info","time":"2024-03-04 15:15:03","caller":"log/config.go:35","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成%!(EXTRA <nil>)"}
+{"level":"error","time":"2024-03-04 15:15:37","caller":"zap@v1.27.0/sugar.go:257","func":"go.uber.org/zap.(*SugaredLogger).Infow","msg":"Ignored key without a value.","ignored":null}
+{"level":"info","time":"2024-03-04 15:15:37","caller":"log/config.go:35","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成"}
+{"level":"error","time":"2024-03-04 15:16:02","caller":"zap@v1.27.0/sugar.go:257","func":"go.uber.org/zap.(*SugaredLogger).Infow","msg":"Ignored key without a value.","ignored":null}
+{"level":"info","time":"2024-03-04 15:16:02","caller":"log/config.go:35","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成"}
