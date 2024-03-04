@@ -12,8 +12,6 @@ var devConf string
 //go:embed prod.toml
 var prodConf string
 
-var Conf = new(Config)
-
 type Config struct {
 	Server struct {
 		Env      string `toml:"env"`
@@ -29,18 +27,26 @@ type Config struct {
 		Compress   bool   `toml:"compress"`
 	}
 	MySQL struct {
-		Address  string `toml:"address"`
-		UserName string `toml:"userName"`
+		Address         string `toml:"address"`
+		UserName        string `toml:"userName"`
+		Password        string `toml:"password@cipher"`
+		DbName          string `toml:"dbName"`
+		ConnMaxLifeTime int    `toml:"connMaxLifeTime"`
+		MaxIdleConn     int    `toml:"maxIdleConn"`
+		MaxOpenConn     int    `toml:"maxOpenConn"`
+		ConnMaxWaitTime string `toml:"connMaxWaitTime"`
 	}
 }
 
-func InitConfig(env string) {
+func InitConfig(env string) *Config {
 	var conf = devConf
 	if env == "prod" {
 		conf = prodConf
 	}
-	_, err := toml.Decode(conf, &Conf)
+	config := &Config{}
+	_, err := toml.Decode(conf, &config)
 	if err != nil {
 		panic(fmt.Sprintf("加载%s配置文件失败:%+v", env, err))
 	}
+	return config
 }
