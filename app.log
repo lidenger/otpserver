@@ -1,0 +1,2 @@
+{"level":"info","time":"2024-03-04 19:54:33","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成,日志文件:[app.log]"}
+{"level":"info","time":"2024-03-04 19:54:41","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成,日志文件:[app.log]"}
