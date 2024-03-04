@@ -15,12 +15,14 @@ var prodConf string
 type Config struct {
 	Server struct {
 		Env      string `toml:"env"`
+		Port     int    `toml:"port"`
 		RootPath string `toml:"rootPath"`
 	}
 	Log struct {
 		Level      string `toml:"level"`
 		RootPath   string `toml:"rootPath"`
 		AppFile    string `toml:"appFile"`
+		HttpFile   string `toml:"httpFile"`
 		MaxSize    int    `toml:"maxSize"`
 		MaxBackups int    `toml:"maxBackups"`
 		MaxAge     int    `toml:"maxAge"`
