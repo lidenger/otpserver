@@ -12,46 +12,44 @@ import (
 
 var zapLogger *zap.Logger
 
-func InitLog() {
-	conf := server.Conf.Log
-	atomicLevel, err := zap.ParseAtomicLevel(conf.Level)
+func InitLog(conf *server.Config) {
+	level, err := zap.ParseAtomicLevel(conf.Log.Level)
 	if err != nil {
 		panic(fmt.Sprintf("日志Level设置错误:%+v", err))
 	}
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(encoderConf()),
-		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(rotatedConf())), // 打印到控制台和文件
-		atomicLevel,
+		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(rotatedConf(conf))), // 打印到控制台和文件
+		level,
 	)
 	// 堆栈跟踪
 	caller := zap.AddCaller()
 	// 开启文件及行号
 	development := zap.Development()
 	zapLogger = zap.New(core, caller, development)
-	Info("日志配置完成")
+	Info("日志配置完成,日志文件:%s", conf.Log.RootPath+conf.Log.AppFile)
 }
 
 func Info(template string, args ...any) {
-	zapLogger.Sugar().Infow(template, args)
+	zapLogger.Sugar().Infof(template, args)
 }
 
 func Warn(template string, args ...any) {
-	zapLogger.Sugar().Warnw(template, args)
+	zapLogger.Sugar().Infof(template, args)
 }
 
 func Error(template string, args ...any) {
-	zapLogger.Sugar().Errorw(template, args)
+	zapLogger.Sugar().Infof(template, args)
 }
 
 // rotatedConf 日志翻滚切割配置
-func rotatedConf() *lumberjack.Logger {
-	logConf := server.Conf.Log
+func rotatedConf(conf *server.Config) *lumberjack.Logger {
 	rotatedWriter := &lumberjack.Logger{
-		Filename:   logConf.RootPath + logConf.AppFile,
-		MaxSize:    logConf.MaxSize,
-		MaxBackups: logConf.MaxBackups,
-		MaxAge:     logConf.MaxAge,
-		Compress:   logConf.Compress,
+		Filename:   conf.Log.RootPath + conf.Log.AppFile,
+		MaxSize:    conf.Log.MaxSize,
+		MaxBackups: conf.Log.MaxBackups,
+		MaxAge:     conf.Log.MaxAge,
+		Compress:   conf.Log.Compress,
 	}
 	return rotatedWriter
 }
