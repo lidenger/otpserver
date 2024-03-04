@@ -1,4 +1,4 @@
-package mysqlstore
+package pgsqlstore
 
 import (
 	"context"

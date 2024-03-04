@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"github.com/lidenger/otpserver/config/log"
+	"github.com/lidenger/otpserver/config/server"
+)
 
 func main() {
-	fmt.Print(123)
+	server.InitConfig("dev")
+	log.InitLog()
 }
