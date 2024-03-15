@@ -6,6 +6,7 @@ import (
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"gorm.io/gorm"
+	"time"
 )
 
 type SecretStore struct {
@@ -16,13 +17,16 @@ type SecretStore struct {
 var _ store.SecretStore = (*SecretStore)(nil)
 
 func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) error {
-
-	return nil
+	db := s.db.Create(m)
+	return db.Error
 }
 
-func (s *SecretStore) Update(ctx context.Context, m *model.AccountSecretModel) error {
-
-	return nil
+func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) error {
+	db := s.db.Model(&model.AccountSecretModel{})
+	db = db.Where("id = ?", ID)
+	params["update_time"] = time.Now()
+	db = db.Updates(params)
+	return db.Error
 }
 
 func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
@@ -54,6 +58,7 @@ func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.Se
 }
 
 func (s *SecretStore) Delete(ctx context.Context, ID int64) error {
-
-	return nil
+	db := s.db
+	db = db.Delete(&model.AccountSecretModel{}, ID)
+	return db.Error
 }

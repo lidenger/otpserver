@@ -42,3 +42,12 @@ func ErrServerUnReady(err error) IErr {
 		code:     code.ServerUnready,
 	}
 }
+
+// ErrStore 存储异常
+func ErrStore(err error) IErr {
+	return &Err{
+		error:    err,
+		httpCode: http.StatusInternalServerError,
+		code:     code.StoreErr,
+	}
+}
