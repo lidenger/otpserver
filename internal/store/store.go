@@ -9,7 +9,7 @@ import (
 
 type SecretStore interface {
 	Insert(ctx context.Context, m *model.AccountSecretModel) error
-	Update(ctx context.Context, m *model.AccountSecretModel) error
+	Update(ctx context.Context, ID int64, params map[string]any) error
 	Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error)
 	SelectByCondition(ctx context.Context, condition *param.SecretParam) (result []*model.AccountSecretModel, err error)
 	Delete(ctx context.Context, ID int64) error
