@@ -1,7 +1,8 @@
-package server
+package serverconf
 
 import (
 	_ "embed"
+	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
 )
@@ -28,6 +29,10 @@ type Config struct {
 		MaxAge     int    `toml:"maxAge"`
 		Compress   bool   `toml:"compress"`
 	}
+	Store struct {
+		MainStore   string `toml:"mainStore"`
+		BackupStore string `toml:"backupStore"`
+	}
 	MySQL struct {
 		Address         string `toml:"address"`
 		UserName        string `toml:"userName"`
@@ -51,4 +56,27 @@ func InitConfig(env string) *Config {
 		panic(fmt.Sprintf("加载%s配置文件失败:%+v", env, err))
 	}
 	return config
+}
+
+// CmdParam 命令参数
+type CmdParam struct {
+	Env         string // dev,prod
+	Port        int    // 服务启动端口
+	MainStore   string // 主存储 mysql,pgsql,oracle
+	BackupStore string // 备存储 mysql,pgsql,oracle
+}
+
+var cmdParam *CmdParam
+
+func GetCmdParam() *CmdParam {
+	if cmdParam != nil {
+		return cmdParam
+	}
+	cmdParam = &CmdParam{}
+	flag.StringVar(&cmdParam.Env, "env", "dev", "当前环境[dev,prod]")
+	flag.IntVar(&cmdParam.Port, "port", 8080, "服务启动端口")
+	flag.StringVar(&cmdParam.MainStore, "mainStore", "mysql", "主存储[mysql,pgsql,oracle]")
+	flag.StringVar(&cmdParam.BackupStore, "backupStore", "", "备存储[mysql,pgsql,oracle]")
+	flag.Parse()
+	return cmdParam
 }
