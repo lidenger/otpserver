@@ -18,6 +18,10 @@ maxAge = 30
 # 是否压缩旧日志文件
 compress = true
 
+[store]
+mainStore = "mysql"
+backupStore = ""
+
 [mysql]
 address = "127.0.0.1:3306"
 userName = "root"

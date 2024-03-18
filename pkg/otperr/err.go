@@ -34,6 +34,15 @@ func ErrParamIllegal(err error) IErr {
 	}
 }
 
+// ErrRepeatAdd 重复添加
+func ErrRepeatAdd(err error) IErr {
+	return &Err{
+		error:    err,
+		httpCode: http.StatusBadRequest,
+		code:     code.ParamRepeatAdd,
+	}
+}
+
 // ErrServerUnReady 服务未准备就绪
 func ErrServerUnReady(err error) IErr {
 	return &Err{
@@ -49,5 +58,41 @@ func ErrStore(err error) IErr {
 		error:    err,
 		httpCode: http.StatusInternalServerError,
 		code:     code.StoreErr,
+	}
+}
+
+// ErrStoreBackup 备存储异常
+func ErrStoreBackup(err error) IErr {
+	return &Err{
+		error:    err,
+		httpCode: http.StatusInternalServerError,
+		code:     code.StoreBackupErr,
+	}
+}
+
+// ErrEncrypt 加密异常
+func ErrEncrypt(err error) IErr {
+	return &Err{
+		error:    err,
+		httpCode: http.StatusInternalServerError,
+		code:     code.EncryptErr,
+	}
+}
+
+// ErrDecrypt 解密异常
+func ErrDecrypt(err error) IErr {
+	return &Err{
+		error:    err,
+		httpCode: http.StatusInternalServerError,
+		code:     code.DecryptErr,
+	}
+}
+
+// ErrAccountSecretDataCheck 账号密钥数据校验失败
+func ErrAccountSecretDataCheck(err error) IErr {
+	return &Err{
+		error:    err,
+		httpCode: http.StatusInternalServerError,
+		code:     code.AccountSecretDataCheckErr,
 	}
 }

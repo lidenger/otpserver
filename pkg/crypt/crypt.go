@@ -30,14 +30,18 @@ func Encrypt(key, iv, data []byte) (string, error) {
 }
 
 // Decrypt AES/CBC/PKCS#7
-func Decrypt(key, iv, cipherText []byte) ([]byte, error) {
+func Decrypt(key, iv []byte, cipherText string) ([]byte, error) {
+	cipherBytes, err := hex.DecodeString(cipherText)
+	if err != nil {
+		return nil, err
+	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 	mode := cipher.NewCBCDecrypter(block, iv)
-	data := make([]byte, len(cipherText))
-	mode.CryptBlocks(data, cipherText)
+	data := make([]byte, len(cipherBytes))
+	mode.CryptBlocks(data, cipherBytes)
 	originData, err := Unpad(data)
 	if err != nil {
 		return nil, err

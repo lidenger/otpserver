@@ -2,14 +2,14 @@ package mysqlconf
 
 import (
 	"fmt"
-	"github.com/lidenger/otpserver/config/server"
+	"github.com/lidenger/otpserver/config/serverconf"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"time"
 )
 
-func InitMySQL(conf *server.Config) *gorm.DB {
+func InitMySQL(conf *serverconf.Config) *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local&timeout=%s",
 		conf.MySQL.UserName,
 		conf.MySQL.Password,

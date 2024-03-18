@@ -16,9 +16,10 @@ type SecretStore struct {
 // 确保SecretStore实现了store.SecretStore
 var _ store.SecretStore = (*SecretStore)(nil)
 
-func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) error {
-	db := s.db.Create(m)
-	return db.Error
+func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (*gorm.DB, error) {
+	tx := s.db.Begin()
+	tx = tx.Create(m)
+	return tx, tx.Error
 }
 
 func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) error {
