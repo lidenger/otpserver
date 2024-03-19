@@ -10,20 +10,20 @@ import (
 )
 
 type SecretStore struct {
-	db *gorm.DB
+	DB *gorm.DB
 }
 
 // 确保SecretStore实现了store.SecretStore
 var _ store.SecretStore = (*SecretStore)(nil)
 
 func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (*gorm.DB, error) {
-	tx := s.db.Begin()
+	tx := s.DB.Begin()
 	tx = tx.Create(m)
 	return tx, tx.Error
 }
 
 func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) error {
-	db := s.db.Model(&model.AccountSecretModel{})
+	db := s.DB.Model(&model.AccountSecretModel{})
 	db = db.Where("id = ?", ID)
 	params["update_time"] = time.Now()
 	db = db.Updates(params)
@@ -31,7 +31,7 @@ func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]an
 }
 
 func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
-	db := store.ConfigPagingParam(param.PageNo, param.PageSize, s.db)
+	db := store.ConfigPagingParam(param.PageNo, param.PageSize, s.DB)
 	if param.SearchTxt != "" {
 		db = db.Where("account like ?", "%"+param.SearchTxt+"%")
 	}
@@ -44,7 +44,7 @@ func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam
 }
 
 func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.SecretParam) (result []*model.AccountSecretModel, err error) {
-	db := s.db
+	db := s.DB
 	if condition.ID != 0 {
 		db.Where("ID = ?", condition.ID)
 	}
@@ -59,7 +59,7 @@ func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.Se
 }
 
 func (s *SecretStore) Delete(ctx context.Context, ID int64) error {
-	db := s.db
+	db := s.DB
 	db = db.Delete(&model.AccountSecretModel{}, ID)
 	return db.Error
 }

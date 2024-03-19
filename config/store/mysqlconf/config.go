@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var DB *gorm.DB
+
 func InitMySQL(conf *serverconf.Config) *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local&timeout=%s",
 		conf.MySQL.UserName,
@@ -37,5 +39,6 @@ func InitMySQL(conf *serverconf.Config) *gorm.DB {
 	_db.SetConnMaxLifetime(time.Duration(conf.MySQL.ConnMaxLifeTime) * time.Minute)
 	_db.SetMaxIdleConns(conf.MySQL.MaxIdleConn)
 	_db.SetMaxOpenConns(conf.MySQL.MaxOpenConn)
+	DB = db
 	return db
 }

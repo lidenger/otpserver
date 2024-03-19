@@ -9,18 +9,18 @@ import (
 )
 
 type SecretStore struct {
-	db *gorm.DB
+	DB *gorm.DB
 }
 
 // 确保SecretStore实现了store.SecretStore
 var _ store.SecretStore = (*SecretStore)(nil)
 
-func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) error {
+func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (*gorm.DB, error) {
 
-	return nil
+	return nil, nil
 }
 
-func (s *SecretStore) Update(ctx context.Context, m *model.AccountSecretModel) error {
+func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) error {
 
 	return nil
 }

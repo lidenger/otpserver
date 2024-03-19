@@ -16,9 +16,9 @@ import (
 )
 
 type SecretSvc struct {
-	store       store.SecretStore // 主存储
-	storeBackup store.SecretStore // 备存储
-	rootKey     []byte            // 根密钥
+	Store       store.SecretStore // 主存储
+	StoreBackup store.SecretStore // 备存储
+	RootKey     []byte            // 根密钥
 	IV          []byte
 }
 
@@ -38,18 +38,18 @@ func (s *SecretSvc) Add(ctx context.Context, account string) error {
 		return err
 	}
 	// 主存储
-	tx, err := s.store.Insert(ctx, m)
+	tx, err := s.Store.Insert(ctx, m)
 	if err != nil {
 		tx.Rollback()
 		return otperr.ErrStore(err)
 	}
 	// 没有备存储直接提交事务
-	if s.storeBackup == nil {
+	if s.StoreBackup == nil {
 		tx.Commit()
 		return nil
 	}
 	// 备存储
-	tx2, err2 := s.storeBackup.Insert(ctx, m)
+	tx2, err2 := s.StoreBackup.Insert(ctx, m)
 	if err2 != nil {
 		// 为了数据一致性，主存储也需要回滚
 		tx.Rollback()
@@ -75,7 +75,7 @@ func (s *SecretSvc) NewSecretModel(account string) (*model.AccountSecretModel, e
 	m.SecretSeed = strings.ReplaceAll(str.String(), "-", "")
 	// 密钥加密存储
 	var err error
-	m.SecretSeed, err = crypt.Encrypt(s.rootKey, s.IV, []byte(m.SecretSeed))
+	m.SecretSeed, err = crypt.Encrypt(s.RootKey, s.IV, []byte(m.SecretSeed))
 	if err != nil {
 		return m, otperr.ErrEncrypt(err)
 	}
@@ -97,18 +97,21 @@ func (s *SecretSvc) IsExists(ctx context.Context, account string) (bool, error) 
 func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.AccountSecretModel, error) {
 	var err error
 	var secretModel *model.AccountSecretModel
-	secretModel, err = findByStore(ctx, account, s.store)
+	secretModel, err = findByStore(ctx, account, s.Store)
 	if err != nil {
-		if s.storeBackup == nil {
+		if s.StoreBackup == nil {
 			return nil, otperr.ErrStore(err)
 		}
 		log.Warn("主存储获取账号密钥信息异常,尝试从备存储获取,主存储异常信息:%+v", err)
 		var errBackup error
-		secretModel, errBackup = findByStore(ctx, account, s.storeBackup)
+		secretModel, errBackup = findByStore(ctx, account, s.StoreBackup)
 		if errBackup != nil {
 			log.Error("主备存储都获取失败,主存储err:%+v,备存储err:%+v", err, errBackup)
 			return nil, otperr.ErrStoreBackup(errBackup)
 		}
+	}
+	if secretModel == nil {
+		return nil, nil
 	}
 	err = s.CheckModel(ctx, secretModel)
 	if err != nil {
@@ -124,7 +127,7 @@ func (s *SecretSvc) CheckModel(ctx context.Context, m *model.AccountSecretModel)
 		msg := fmt.Sprintf("账号[%s]数据被篡改，数据校验不通过，请关注", m.Account)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
-	secret, err := crypt.Decrypt(s.rootKey, s.IV, m.SecretSeed)
+	secret, err := crypt.Decrypt(s.RootKey, s.IV, m.SecretSeed)
 	if err != nil {
 		return otperr.ErrDecrypt(err)
 	}
@@ -149,5 +152,5 @@ func findByStore(ctx context.Context, account string, s store.SecretStore) (*mod
 // CalcDataCheckSum 计算数据校验和
 func (s *SecretSvc) CalcDataCheckSum(isEnable uint8, account, secretSeedCipher string) string {
 	data := fmt.Sprintf("%d,%s,%s", isEnable, account, secretSeedCipher)
-	return crypt.HmacDigest(s.rootKey, data)
+	return crypt.HmacDigest(s.RootKey, data)
 }

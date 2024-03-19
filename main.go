@@ -4,25 +4,21 @@ import (
 	"fmt"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
-	"github.com/lidenger/otpserver/config/store/mysqlconf"
 	"github.com/lidenger/otpserver/internal/router"
+	"github.com/lidenger/otpserver/internal/service"
+	"github.com/lidenger/otpserver/internal/store"
 )
 
 func main() {
-	conf := serverconf.InitConfig("dev")
+	serverconf.InitCmdParam()
+	conf := serverconf.InitConfig()
 	log.InitLog(conf)
-	initStore(conf)
+	store.InitStore(conf)
+	service.InitSvc()
 	g := router.InitRouter()
+	log.Info("Http服务已启动,端口:%d", conf.Server.Port)
 	err := g.Run(fmt.Sprintf("0.0.0.0:%d", conf.Server.Port))
 	if err != nil {
 		panic(err)
-	}
-}
-
-// 初始化store
-func initStore(conf *serverconf.Config) {
-	cmd := serverconf.GetCmdParam()
-	if cmd.MainStore == "mysql" || cmd.BackupStore == "mysql" {
-		mysqlconf.InitMySQL(conf)
 	}
 }
