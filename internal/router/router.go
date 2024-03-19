@@ -16,4 +16,8 @@ func InitRouter() *gin.Engine {
 
 func api(g *gin.Engine) {
 	g.GET("/health", controller.Health)
+
+	v1 := g.Group("/v1")
+	secretv1 := v1.Group("/secret")
+	secretv1.POST("", controller.AddAccountSecret)
 }

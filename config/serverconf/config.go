@@ -2,6 +2,7 @@ package serverconf
 
 import (
 	_ "embed"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
@@ -45,15 +46,15 @@ type Config struct {
 	}
 }
 
-func InitConfig(env string) *Config {
+func InitConfig() *Config {
 	var conf = devConf
-	if env == "prod" {
+	if CMD.Env == "prod" {
 		conf = prodConf
 	}
 	config := &Config{}
 	_, err := toml.Decode(conf, &config)
 	if err != nil {
-		panic(fmt.Sprintf("加载%s配置文件失败:%+v", env, err))
+		panic(fmt.Sprintf("加载%s配置文件失败:%+v", CMD.Env, err))
 	}
 	return config
 }
@@ -64,19 +65,19 @@ type CmdParam struct {
 	Port        int    // 服务启动端口
 	MainStore   string // 主存储 mysql,pgsql,oracle
 	BackupStore string // 备存储 mysql,pgsql,oracle
+	RootKey     string // 根密钥
+	IV          string // CBC IV
 }
 
-var cmdParam *CmdParam
+var CMD *CmdParam
 
-func GetCmdParam() *CmdParam {
-	if cmdParam != nil {
-		return cmdParam
-	}
-	cmdParam = &CmdParam{}
-	flag.StringVar(&cmdParam.Env, "env", "dev", "当前环境[dev,prod]")
-	flag.IntVar(&cmdParam.Port, "port", 8080, "服务启动端口")
-	flag.StringVar(&cmdParam.MainStore, "mainStore", "mysql", "主存储[mysql,pgsql,oracle]")
-	flag.StringVar(&cmdParam.BackupStore, "backupStore", "", "备存储[mysql,pgsql,oracle]")
+func InitCmdParam() {
+	CMD = &CmdParam{}
+	flag.StringVar(&CMD.Env, "env", "dev", "当前环境[dev,prod]")
+	flag.IntVar(&CMD.Port, "port", 8080, "服务启动端口")
+	flag.StringVar(&CMD.MainStore, "mainStore", "mysql", "主存储[mysql,pgsql,oracle]")
+	flag.StringVar(&CMD.BackupStore, "backupStore", "", "备存储[mysql,pgsql,oracle]")
+	flag.StringVar(&CMD.RootKey, "rootKey", hex.EncodeToString([]byte("12345678901234561234567890123456")), "服务根密钥")
+	flag.StringVar(&CMD.IV, "iv", hex.EncodeToString([]byte("1234567890123456")), "CBC IV")
 	flag.Parse()
-	return cmdParam
 }
