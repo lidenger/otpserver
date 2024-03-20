@@ -13,20 +13,28 @@ import (
 	"strings"
 )
 
+// SecretStore 账号密钥
 type SecretStore interface {
-	Insert(ctx context.Context, m *model.AccountSecretModel) (*gorm.DB, error)
-	Update(ctx context.Context, ID int64, params map[string]any) error
+	Insert(ctx context.Context, m *model.AccountSecretModel) (Tx, error)
+	Update(ctx context.Context, ID int64, params map[string]any) (Tx, error)
 	Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error)
 	SelectByCondition(ctx context.Context, condition *param.SecretParam) (result []*model.AccountSecretModel, err error)
-	Delete(ctx context.Context, ID int64) error
+	Delete(ctx context.Context, ID int64) (Tx, error)
 }
 
+// ServerStore 接入的服务
 type ServerStore interface {
 	Insert(ctx context.Context, m *model.ServerModel) error
 	Update(ctx context.Context, m *model.ServerModel) error
 	Paging(ctx context.Context, param *param.ServerPagingParam) ([]*model.ServerModel, error)
 	SelectByCondition(ctx context.Context, condition *param.ServerPagingParam) ([]*model.ServerModel, error)
 	Delete(ctx context.Context, ID int64) error
+}
+
+// Tx 事务，这里定义事务接口，不依赖于具体的框架实现，降低耦合
+type Tx interface {
+	Commit()
+	Rollback()
 }
 
 // ConfigPagingParam 设置db分页参数

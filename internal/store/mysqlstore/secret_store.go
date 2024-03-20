@@ -16,18 +16,19 @@ type SecretStore struct {
 // 确保SecretStore实现了store.SecretStore
 var _ store.SecretStore = (*SecretStore)(nil)
 
-func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (*gorm.DB, error) {
+func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (store.Tx, error) {
 	tx := s.DB.Begin()
 	tx = tx.Create(m)
-	return tx, tx.Error
+	return getTx(tx), tx.Error
 }
 
-func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) error {
-	db := s.DB.Model(&model.AccountSecretModel{})
-	db = db.Where("id = ?", ID)
+func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) (store.Tx, error) {
+	tx := s.DB.Begin()
+	tx = tx.Model(&model.AccountSecretModel{})
+	tx = tx.Where("id = ?", ID)
 	params["update_time"] = time.Now()
-	db = db.Updates(params)
-	return db.Error
+	tx = tx.Updates(params)
+	return getTx(tx), tx.Error
 }
 
 func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
@@ -46,20 +47,20 @@ func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam
 func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.SecretParam) (result []*model.AccountSecretModel, err error) {
 	db := s.DB
 	if condition.ID != 0 {
-		db.Where("ID = ?", condition.ID)
+		db = db.Where("ID = ?", condition.ID)
 	}
 	if condition.IsEnable != 0 {
-		db.Where("is_enable = ?", condition.IsEnable)
+		db = db.Where("is_enable = ?", condition.IsEnable)
 	}
 	if condition.Account != "" {
-		db.Where("account = ?", condition.Account)
+		db = db.Where("account = ?", condition.Account)
 	}
 	err = db.Order("update_time desc").Find(&result).Error
 	return
 }
 
-func (s *SecretStore) Delete(ctx context.Context, ID int64) error {
-	db := s.DB
-	db = db.Delete(&model.AccountSecretModel{}, ID)
-	return db.Error
+func (s *SecretStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {
+	tx := s.DB.Begin()
+	tx = tx.Delete(&model.AccountSecretModel{}, ID)
+	return getTx(tx), tx.Error
 }

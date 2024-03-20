@@ -68,3 +68,31 @@
 {"level":"info","time":"2024-03-19 20:43:55","caller":"log/config.go:46","func":"github.com/lidenger/otpserver/config/log.Error","msg":"[账号lidenger已存在不能重复添加]"}
 {"level":"info","time":"2024-03-19 20:43:59","caller":"log/config.go:46","func":"github.com/lidenger/otpserver/config/log.Error","msg":"[账号lidenger已存在不能重复添加]"}
 {"level":"info","time":"2024-03-19 20:44:00","caller":"log/config.go:46","func":"github.com/lidenger/otpserver/config/log.Error","msg":"[账号lidenger已存在不能重复添加]"}
+{"level":"info","time":"2024-03-20 10:28:19","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成,日志文件:[app.log]"}
+{"level":"info","time":"2024-03-20 10:28:19","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"[存储初始化完成,主存储:mysql,备存储:未启用]"}
+{"level":"info","time":"2024-03-20 10:28:19","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Service初始化完成:[SecretSvc ServerSvc]"}
+{"level":"info","time":"2024-03-20 10:28:19","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Http服务已启动,端口:[8066]"}
+{"level":"info","time":"2024-03-20 19:41:29","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成,日志文件:[app.log]"}
+{"level":"info","time":"2024-03-20 19:41:29","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"[存储初始化完成,主存储:mysql,备存储:未启用]"}
+{"level":"info","time":"2024-03-20 19:41:29","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Service初始化完成:[SecretSvc ServerSvc]"}
+{"level":"info","time":"2024-03-20 19:41:29","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Http服务已启动,端口:[8066]"}
+{"level":"info","time":"2024-03-20 19:42:16","caller":"log/config.go:46","func":"github.com/lidenger/otpserver/config/log.Error","msg":"[账号lidenger已存在不能重复添加]"}
+{"level":"info","time":"2024-03-20 19:42:25","caller":"log/config.go:46","func":"github.com/lidenger/otpserver/config/log.Error","msg":"[账号ly已存在不能重复添加]"}
+{"level":"info","time":"2024-03-20 19:44:27","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成,日志文件:[app.log]"}
+{"level":"info","time":"2024-03-20 19:44:27","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"[存储初始化完成,主存储:mysql,备存储:未启用]"}
+{"level":"info","time":"2024-03-20 19:44:27","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Service初始化完成:[SecretSvc ServerSvc]"}
+{"level":"info","time":"2024-03-20 19:44:27","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Http服务已启动,端口:[8066]"}
+{"level":"info","time":"2024-03-20 19:44:48","caller":"log/config.go:46","func":"github.com/lidenger/otpserver/config/log.Error","msg":"[账号ly已存在不能重复添加]"}
+{"level":"info","time":"2024-03-20 19:45:05","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成,日志文件:[app.log]"}
+{"level":"info","time":"2024-03-20 19:45:05","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"[存储初始化完成,主存储:mysql,备存储:未启用]"}
+{"level":"info","time":"2024-03-20 19:45:05","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Service初始化完成:[SecretSvc ServerSvc]"}
+{"level":"info","time":"2024-03-20 19:45:05","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Http服务已启动,端口:[8066]"}
+{"level":"info","time":"2024-03-20 19:45:22","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成,日志文件:[app.log]"}
+{"level":"info","time":"2024-03-20 19:45:22","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"[存储初始化完成,主存储:mysql,备存储:未启用]"}
+{"level":"info","time":"2024-03-20 19:45:22","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Service初始化完成:[SecretSvc ServerSvc]"}
+{"level":"info","time":"2024-03-20 19:45:22","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Http服务已启动,端口:[8066]"}
+{"level":"info","time":"2024-03-20 19:46:28","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"日志配置完成,日志文件:[app.log]"}
+{"level":"info","time":"2024-03-20 19:46:28","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"[存储初始化完成,主存储:mysql,备存储:未启用]"}
+{"level":"info","time":"2024-03-20 19:46:28","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Service初始化完成:[SecretSvc ServerSvc]"}
+{"level":"info","time":"2024-03-20 19:46:28","caller":"log/config.go:38","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Http服务已启动,端口:[8066]"}
+{"level":"info","time":"2024-03-20 19:46:39","caller":"log/config.go:46","func":"github.com/lidenger/otpserver/config/log.Error","msg":"[账号ly已存在不能重复添加]"}

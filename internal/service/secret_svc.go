@@ -124,7 +124,7 @@ func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.Ac
 func (s *SecretSvc) CheckModel(ctx context.Context, m *model.AccountSecretModel) error {
 	check := s.CalcDataCheckSum(m.IsEnable, m.Account, m.SecretSeed)
 	if m.DataCheck != check {
-		msg := fmt.Sprintf("账号[%s]数据被篡改，数据校验不通过，请关注", m.Account)
+		msg := fmt.Sprintf("账号[%s]密钥数据[ID:%d]校验不通过，请关注", m.Account, m.ID)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
 	secret, err := crypt.Decrypt(s.RootKey, s.IV, m.SecretSeed)
