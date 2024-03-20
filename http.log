@@ -16,3 +16,8 @@
 {"level":"info","time":"2024-03-19 20:43:55","code":400,"method":"POST","path":"/v1/secret","ip":"127.0.0.1","ua":"PostmanRuntime/7.37.0","cost":0.0006373}
 {"level":"info","time":"2024-03-19 20:43:59","code":400,"method":"POST","path":"/v1/secret","ip":"127.0.0.1","ua":"PostmanRuntime/7.37.0","cost":0.001499}
 {"level":"info","time":"2024-03-19 20:44:00","code":400,"method":"POST","path":"/v1/secret","ip":"127.0.0.1","ua":"PostmanRuntime/7.37.0","cost":0.0007373}
+{"level":"info","time":"2024-03-20 19:42:16","code":400,"method":"POST","path":"/v1/secret","ip":"127.0.0.1","ua":"PostmanRuntime/7.37.0","cost":0.013318}
+{"level":"info","time":"2024-03-20 19:42:25","code":400,"method":"POST","path":"/v1/secret","ip":"127.0.0.1","ua":"PostmanRuntime/7.37.0","cost":0.0012376}
+{"level":"info","time":"2024-03-20 19:44:48","code":400,"method":"POST","path":"/v1/secret","ip":"127.0.0.1","ua":"PostmanRuntime/7.37.0","cost":9.9256196}
+{"level":"info","time":"2024-03-20 19:46:37","code":200,"method":"POST","path":"/v1/secret","ip":"127.0.0.1","ua":"PostmanRuntime/7.37.0","cost":0.0167365}
+{"level":"info","time":"2024-03-20 19:46:39","code":400,"method":"POST","path":"/v1/secret","ip":"127.0.0.1","ua":"PostmanRuntime/7.37.0","cost":0.0011358}

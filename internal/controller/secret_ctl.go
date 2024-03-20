@@ -19,3 +19,8 @@ func AddAccountSecret(ctx *gin.Context) {
 	err := service.AccountSecretSvc.Add(ctx, p.Account)
 	result.R(ctx, err, "")
 }
+
+// 获取密钥信息
+func getAccountSecret(ctx *gin.Context) {
+
+}
