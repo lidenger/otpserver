@@ -4,22 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/otperr"
-	"strings"
 	"time"
 )
 
 type SecretSvc struct {
+	Crypt
 	Store       store.SecretStore // 主存储
 	StoreBackup store.SecretStore // 备存储
-	RootKey     []byte            // 根密钥
-	IV          []byte
 }
 
 // Add 添加账号密钥
@@ -37,29 +34,17 @@ func (s *SecretSvc) Add(ctx context.Context, account string) error {
 	if err != nil {
 		return err
 	}
-	// 主存储
-	tx, err := s.Store.Insert(ctx, m)
-	if err != nil {
-		tx.Rollback()
-		return otperr.ErrStore(err)
+	// 主备写
+	var backupExec doubleWriteFunc = nil
+	if s.StoreBackup != nil {
+		backupExec = func() (store.Tx, error) {
+			return s.StoreBackup.Insert(ctx, m)
+		}
 	}
-	// 没有备存储直接提交事务
-	if s.StoreBackup == nil {
-		tx.Commit()
-		return nil
-	}
-	// 备存储
-	tx2, err2 := s.StoreBackup.Insert(ctx, m)
-	if err2 != nil {
-		// 为了数据一致性，主存储也需要回滚
-		tx.Rollback()
-		tx2.Rollback()
-		return otperr.ErrStoreBackup(err2)
-	}
-	// 主备存储成功，提交事务
-	tx.Commit()
-	tx2.Commit()
-	return nil
+	err = DoubleWrite(func() (store.Tx, error) {
+		return s.Store.Insert(ctx, m)
+	}, backupExec)
+	return err
 }
 
 // NewSecretModel 创建一个新的账号密钥model
@@ -71,13 +56,11 @@ func (s *SecretSvc) NewSecretModel(account string) (*model.AccountSecretModel, e
 	n := time.Now()
 	m.CreateTime = n
 	m.UpdateTime = n
-	str, _ := uuid.NewUUID()
-	m.SecretSeed = strings.ReplaceAll(str.String(), "-", "")
 	// 密钥加密存储
 	var err error
-	m.SecretSeed, err = crypt.Encrypt(s.RootKey, s.IV, []byte(m.SecretSeed))
+	m.SecretSeed, err = genSecret(s.RootKey, s.IV)
 	if err != nil {
-		return m, otperr.ErrEncrypt(err)
+		return nil, err
 	}
 	// 计算数据摘要
 	m.DataCheck = s.CalcDataCheckSum(m.IsEnable, m.Account, m.SecretSeed)

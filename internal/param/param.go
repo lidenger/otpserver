@@ -8,7 +8,7 @@ type PagingParam struct {
 
 type SecretParam struct {
 	ID       int64  `json:"id"`
-	Account  string `json:"account"`
+	Account  string `json:"account" valid:"required"`
 	IsEnable uint8  `json:"is_enable"`
 }
 
@@ -19,8 +19,9 @@ type SecretPagingParam struct {
 
 type ServerParam struct {
 	ID       int64  `json:"id"`
-	Sign     string `json:"sign"`
-	Name     string `json:"name"`
+	Sign     string `json:"sign" valid:"required"`
+	Name     string `json:"name" valid:"required"`
+	Remark   string `json:"remark"`
 	IsEnable uint8  `json:"is_enable"`
 }
 
