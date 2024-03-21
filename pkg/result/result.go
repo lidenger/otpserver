@@ -1,6 +1,7 @@
 package result
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/pkg/code"
@@ -18,6 +19,11 @@ func result(ctx *gin.Context, httpCode int, code code.CODE, message string, data
 
 func Success(ctx *gin.Context, data any) {
 	result(ctx, http.StatusOK, code.Success, "success", data)
+}
+
+func ParamErr(ctx *gin.Context, msg string) {
+	err := otperr.ErrParamIllegal(errors.New(msg))
+	R(ctx, err, "")
 }
 
 func R(ctx *gin.Context, err error, data any) {
