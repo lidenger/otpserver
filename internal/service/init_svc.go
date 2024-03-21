@@ -11,6 +11,7 @@ import (
 )
 
 var AccountSecretSvc = &SecretSvc{}
+var ServerSvcIns = &ServerSvc{}
 
 func InitSvc() {
 	rootKey, err := hex.DecodeString(serverconf.CMD.RootKey)
@@ -23,15 +24,21 @@ func InitSvc() {
 	}
 	AccountSecretSvc.RootKey = rootKey
 	AccountSecretSvc.IV = iv
+
+	ServerSvcIns.RootKey = rootKey
+	ServerSvcIns.IV = iv
+
 	switch serverconf.CMD.MainStore {
 	case "mysql":
 		AccountSecretSvc.Store = &mysqlstore.SecretStore{DB: mysqlconf.DB}
+		ServerSvcIns.Store = &mysqlstore.ServerStore{DB: mysqlconf.DB}
 	case "pgsql":
 		AccountSecretSvc.Store = &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
 	}
 	switch serverconf.CMD.BackupStore {
 	case "mysql":
 		AccountSecretSvc.StoreBackup = &mysqlstore.SecretStore{DB: mysqlconf.DB}
+		ServerSvcIns.StoreBackup = &mysqlstore.ServerStore{DB: mysqlconf.DB}
 	case "pgsql":
 		AccountSecretSvc.StoreBackup = &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
 	}

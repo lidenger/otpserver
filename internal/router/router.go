@@ -19,10 +19,16 @@ func api(g *gin.Engine) {
 
 	v1 := g.Group("/v1")
 	{
-		secretv1 := v1.Group("/secret")
+		secretv1 := v1.Group("/secret") // 账号密钥
 		{
 			secretv1.POST("", handler.AddAccountSecret)        // POST /v1/secret
 			secretv1.GET(":account", handler.GetAccountSecret) // GET /v1/secret/zhangsan
+		}
+
+		serverv1 := v1.Group("/server") // 接入服务
+		{
+			serverv1.POST("", handler.AddServer)
+			serverv1.GET(":sign", handler.GetAccountSecret)
 		}
 	}
 

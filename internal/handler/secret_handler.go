@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/service"
@@ -14,7 +15,12 @@ func AddAccountSecret(ctx *gin.Context) {
 		result.ParamErr(ctx, "非法参数")
 		return
 	}
-	err := service.AccountSecretSvc.Add(ctx, p.Account)
+	_, err := govalidator.ValidateStruct(p)
+	if err != nil {
+		result.ParamErr(ctx, err.Error())
+		return
+	}
+	err = service.AccountSecretSvc.Add(ctx, p.Account)
 	result.R(ctx, err, "")
 }
 
