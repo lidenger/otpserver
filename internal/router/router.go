@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lidenger/otpserver/internal/controller"
+	"github.com/lidenger/otpserver/internal/handler"
 	"github.com/lidenger/otpserver/internal/middleware"
 )
 
@@ -15,13 +15,14 @@ func InitRouter() *gin.Engine {
 }
 
 func api(g *gin.Engine) {
-	g.GET("/health", controller.Health)
+	g.GET("/health", handler.Health)
 
 	v1 := g.Group("/v1")
 	{
 		secretv1 := v1.Group("/secret")
 		{
-			secretv1.POST("", controller.AddAccountSecret) // 创建账号密钥
+			secretv1.POST("", handler.AddAccountSecret)        // POST /v1/secret
+			secretv1.GET(":account", handler.GetAccountSecret) // GET /v1/secret/zhangsan
 		}
 	}
 
