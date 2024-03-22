@@ -1,11 +1,11 @@
 package service
 
 import (
-	"github.com/google/uuid"
+	"encoding/base32"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/otperr"
-	"strings"
+	"github.com/lidenger/otpserver/pkg/util"
 )
 
 type Crypt struct {
@@ -15,9 +15,9 @@ type Crypt struct {
 
 // 生成密钥
 func genSecret(rootKey, iv []byte) (string, error) {
-	str, _ := uuid.NewUUID()
-	secret := strings.ReplaceAll(str.String(), "-", "")
-	secretCipher, err := crypt.Encrypt(rootKey, iv, []byte(secret))
+	secret := util.GenerateStr()
+	secretEncode := base32.StdEncoding.EncodeToString([]byte(secret))
+	secretCipher, err := crypt.Encrypt(rootKey, iv, []byte(secretEncode))
 	if err != nil {
 		return "", otperr.ErrEncrypt(err)
 	}

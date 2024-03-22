@@ -19,6 +19,10 @@ func api(g *gin.Engine) {
 
 	v1 := g.Group("/v1")
 	{
+		{
+			v1.GET("/valid", handler.ValidCode) // 验证动态令牌
+		}
+
 		secretv1 := v1.Group("/secret") // 账号密钥
 		{
 			secretv1.POST("", handler.AddAccountSecret)        // POST /v1/secret
@@ -28,7 +32,7 @@ func api(g *gin.Engine) {
 		serverv1 := v1.Group("/server") // 接入服务
 		{
 			serverv1.POST("", handler.AddServer)
-			serverv1.GET(":sign", handler.GetAccountSecret)
+			serverv1.GET(":sign", handler.GetServer)
 		}
 	}
 
