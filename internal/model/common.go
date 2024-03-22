@@ -28,14 +28,9 @@ type Common struct {
 }
 
 func (c *Common) BeforeCreate(tx *gorm.DB) (err error) {
-	if c.IsEnable == 0 {
-		c.IsEnable = 1
-	}
-	err = c.Time.BeforeCreate(tx)
-	return err
+	return c.Time.BeforeCreate(tx)
 }
 
 func (c *Common) BeforeUpdate(tx *gorm.DB) (err error) {
-	err = c.Time.BeforeUpdate(tx)
-	return err
+	return c.Time.BeforeUpdate(tx)
 }
