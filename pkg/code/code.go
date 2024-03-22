@@ -7,6 +7,7 @@ const (
 
 	ParamIllegal   CODE = 400001 // 非法参数
 	ParamRepeatAdd CODE = 400002 // 重复添加
+	DataNotExists  CODE = 400003 // 数据不存在
 
 	ServerErr     CODE = 500000 // 服务异常
 	ServerUnready CODE = 500001 // 服务未准备就绪
@@ -18,6 +19,7 @@ const (
 	EncryptErr  CODE = 500021 // 加密异常
 	DecryptErr  CODE = 500022 // 解密异常
 	DigestedErr CODE = 500023 // 摘要异常
+	GenCodeErr  CODE = 500024 // 生成动态令牌异常
 
 	DataErr                   CODE = 500030 // 数据异常
 	AccountSecretDataCheckErr CODE = 500031 // 账号密钥数据校验失败

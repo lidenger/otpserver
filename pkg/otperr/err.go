@@ -1,6 +1,8 @@
 package otperr
 
 import (
+	"errors"
+	"fmt"
 	"github.com/lidenger/otpserver/pkg/code"
 	"net/http"
 )
@@ -40,6 +42,16 @@ func ErrRepeatAdd(err error) IErr {
 		error:    err,
 		httpCode: http.StatusBadRequest,
 		code:     code.ParamRepeatAdd,
+	}
+}
+
+// ErrDataNotExists 重复添加
+func ErrDataNotExists(format string, arg ...any) IErr {
+	msg := fmt.Sprintf(format, arg)
+	return &Err{
+		error:    errors.New(msg),
+		httpCode: http.StatusBadRequest,
+		code:     code.DataNotExists,
 	}
 }
 
@@ -94,5 +106,14 @@ func ErrAccountSecretDataCheck(err error) IErr {
 		error:    err,
 		httpCode: http.StatusInternalServerError,
 		code:     code.AccountSecretDataCheckErr,
+	}
+}
+
+// ErrGenCode 生成动态令牌异常
+func ErrGenCode(err error) IErr {
+	return &Err{
+		error:    err,
+		httpCode: http.StatusInternalServerError,
+		code:     code.GenCodeErr,
 	}
 }

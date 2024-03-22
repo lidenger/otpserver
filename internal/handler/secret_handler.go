@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/service"
@@ -11,22 +10,17 @@ import (
 // AddAccountSecret 新增账号密钥
 func AddAccountSecret(ctx *gin.Context) {
 	var p *param.SecretParam
-	if err := ctx.ShouldBindJSON(&p); err != nil {
-		result.ParamErr(ctx, "非法参数")
+	p = validParam(ctx, p)
+	if p == nil {
 		return
 	}
-	_, err := govalidator.ValidateStruct(p)
-	if err != nil {
-		result.ParamErr(ctx, err.Error())
-		return
-	}
-	err = service.AccountSecretSvc.Add(ctx, p.Account)
+	err := service.SecretSvcIns.Add(ctx, p.Account)
 	result.R(ctx, err, "")
 }
 
 // GetAccountSecret 获取密钥信息
 func GetAccountSecret(ctx *gin.Context) {
 	account := ctx.Param("account")
-	model, err := service.AccountSecretSvc.GetByAccount(ctx, account)
+	model, err := service.SecretSvcIns.GetByAccount(ctx, account)
 	result.R(ctx, err, model)
 }

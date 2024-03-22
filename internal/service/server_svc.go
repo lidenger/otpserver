@@ -10,6 +10,7 @@ import (
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/otperr"
+	"github.com/lidenger/otpserver/pkg/util"
 	"time"
 )
 
@@ -119,18 +120,14 @@ func findServerByStore(ctx context.Context, sign string, s store.ServerStore) (*
 	if err != nil {
 		return nil, err
 	}
-	if len(data) > 0 {
-		return data[0], nil
-	} else {
-		return nil, nil
-	}
+	return util.GetArrFirstItem(data), nil
 }
 
 // CheckModel 校验数据,解密账号密钥密文
 func (s *ServerSvc) CheckModel(ctx context.Context, m *model.ServerModel) error {
 	check := s.CalcDataCheckSum(m.IsEnable, m.Sign, m.Secret)
 	if m.DataCheck != check {
-		msg := fmt.Sprintf("服务[%s]数据[ID:%d]校验不通过，请关注", m.Sign, m.ID)
+		msg := fmt.Sprintf("服务数据校验不通过,疑似被篡改,请关注(ID:%d,sign:%s)", m.ID, m.Sign)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
 	secret, err := crypt.Decrypt(s.RootKey, s.IV, m.Secret)

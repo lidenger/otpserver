@@ -10,6 +10,7 @@ import (
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/otperr"
+	"github.com/lidenger/otpserver/pkg/util"
 	"time"
 )
 
@@ -76,7 +77,7 @@ func (s *SecretSvc) IsExists(ctx context.Context, account string) (bool, error) 
 	return secretData != nil, nil
 }
 
-// GetByAccount 通过账号获取密钥信息
+// GetByAccount 通过账号获取密钥信息,密钥已解密
 func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.AccountSecretModel, error) {
 	var err error
 	var secretModel *model.AccountSecretModel
@@ -107,7 +108,7 @@ func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.Ac
 func (s *SecretSvc) CheckModel(ctx context.Context, m *model.AccountSecretModel) error {
 	check := s.CalcDataCheckSum(m.IsEnable, m.Account, m.SecretSeed)
 	if m.DataCheck != check {
-		msg := fmt.Sprintf("账号[%s]密钥数据[ID:%d]校验不通过，请关注", m.Account, m.ID)
+		msg := fmt.Sprintf("账号密钥数据校验不通过,疑似被篡改,请关注(ID:%d,账号:%s)", m.ID, m.Account)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
 	secret, err := crypt.Decrypt(s.RootKey, s.IV, m.SecretSeed)
@@ -125,11 +126,7 @@ func findByStore(ctx context.Context, account string, s store.SecretStore) (*mod
 	if err != nil {
 		return nil, err
 	}
-	if len(data) > 0 {
-		return data[0], nil
-	} else {
-		return nil, nil
-	}
+	return util.GetArrFirstItem(data), nil
 }
 
 // CalcDataCheckSum 计算数据校验和

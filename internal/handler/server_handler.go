@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/service"
@@ -10,15 +9,16 @@ import (
 
 func AddServer(ctx *gin.Context) {
 	var p *param.ServerParam
-	if err := ctx.ShouldBindJSON(&p); err != nil {
-		result.ParamErr(ctx, "非法参数")
+	p = validParam(ctx, p)
+	if p == nil {
 		return
 	}
-	_, err := govalidator.ValidateStruct(p)
-	if err != nil {
-		result.ParamErr(ctx, err.Error())
-		return
-	}
-	err = service.ServerSvcIns.Add(ctx, p)
+	err := service.ServerSvcIns.Add(ctx, p)
 	result.R(ctx, err, "")
+}
+
+func GetServer(ctx *gin.Context) {
+	sign := ctx.Param("sign")
+	model, err := service.ServerSvcIns.GetBySign(ctx, sign)
+	result.R(ctx, err, model)
 }
