@@ -11,7 +11,6 @@ import (
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/otperr"
 	"github.com/lidenger/otpserver/pkg/util"
-	"time"
 )
 
 type SecretSvc struct {
@@ -52,11 +51,7 @@ func (s *SecretSvc) Add(ctx context.Context, account string) error {
 func (s *SecretSvc) NewSecretModel(account string) (*model.AccountSecretModel, error) {
 	m := &model.AccountSecretModel{}
 	m.Account = account
-	// 默认启用
 	m.IsEnable = 1
-	n := time.Now()
-	m.CreateTime = n
-	m.UpdateTime = n
 	// 密钥加密存储
 	var err error
 	m.SecretSeed, err = genSecret(s.RootKey, s.IV)

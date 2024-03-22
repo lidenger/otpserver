@@ -11,7 +11,6 @@ import (
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/otperr"
 	"github.com/lidenger/otpserver/pkg/util"
-	"time"
 )
 
 type ServerSvc struct {
@@ -53,15 +52,11 @@ func (s *ServerSvc) NewServerModel(p *param.ServerParam) (*model.ServerModel, er
 	m.Name = p.Name
 	m.Sign = p.Sign
 	m.Remark = p.Remark
-	if p.IsEnable == 0 {
-		// 默认启用
+	m.IsEnable = p.IsEnable
+	// 默认启用
+	if m.IsEnable == 0 {
 		m.IsEnable = 1
-	} else {
-		m.IsEnable = p.IsEnable
 	}
-	n := time.Now()
-	m.CreateTime = n
-	m.UpdateTime = n
 	var err error
 	m.Secret, err = genSecret(s.RootKey, s.IV)
 	if err != nil {
