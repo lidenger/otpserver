@@ -55,6 +55,16 @@ func ErrDataNotExists(format string, arg ...any) IErr {
 	}
 }
 
+// ErrReqOverLimit 请求超限
+func ErrReqOverLimit(format string, arg ...any) IErr {
+	msg := fmt.Sprintf(format, arg)
+	return &Err{
+		error:    errors.New(msg),
+		httpCode: http.StatusTooManyRequests,
+		code:     code.ReqOverLimit,
+	}
+}
+
 // ErrServerUnReady 服务未准备就绪
 func ErrServerUnReady(err error) IErr {
 	return &Err{

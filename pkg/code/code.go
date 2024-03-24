@@ -8,6 +8,7 @@ const (
 	ParamIllegal   CODE = 400001 // 非法参数
 	ParamRepeatAdd CODE = 400002 // 重复添加
 	DataNotExists  CODE = 400003 // 数据不存在
+	ReqOverLimit   CODE = 429001 // 请求超限
 
 	ServerErr     CODE = 500000 // 服务异常
 	ServerUnready CODE = 500001 // 服务未准备就绪
