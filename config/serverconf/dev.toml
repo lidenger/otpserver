@@ -2,6 +2,8 @@
 env = "dev"
 port = 8066
 rootPath = ""
+# 限速QPS
+reqLimit = 100
 
 [log]
 # debug info error

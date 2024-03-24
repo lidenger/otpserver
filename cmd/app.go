@@ -15,7 +15,7 @@ func main() {
 	log.InitLog(conf)
 	store.InitStore(conf)
 	service.InitSvc()
-	g := router.InitRouter()
+	g := router.InitRouter(conf)
 	log.Info("Http服务已启动,端口:%d", conf.Server.Port)
 	err := g.Run(fmt.Sprintf("0.0.0.0:%d", conf.Server.Port))
 	if err != nil {
