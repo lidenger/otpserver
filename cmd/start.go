@@ -17,12 +17,15 @@ var CodeLevelProtectIV = []byte("ad5457f8ea5711ee")
 
 // Param 命令参数
 type Param struct {
-	Init         bool   // 初始化
-	Env          string // dev,prod
-	Port         int    // 服务启动端口
-	MainStore    string // 主存储 mysql,pgsql,oracle
-	BackupStore  string // 备存储 mysql,pgsql,oracle
-	StartKeyFile string // start key file 路径
+	IsInitMode  bool   // 初始化模式
+	IsToolMode  bool   // 工具模式
+	Encrypt     bool   // 工具模式-加密数据
+	EncryptData string // 工具模式-加密的源数据
+	Env         string // dev,prod
+	Port        int    // 服务启动端口
+	MainStore   string // 主存储 mysql,pgsql,oracle
+	BackupStore string // 备存储 mysql,pgsql,oracle
+	AppKeyFile  string // app key file 路径
 	*Crypt
 }
 
@@ -36,17 +39,20 @@ var P *Param
 
 func InitParam() {
 	P = &Param{}
-	flag.BoolVar(&P.Init, "init", false, "系统初始化")
+	flag.BoolVar(&P.IsInitMode, "init", false, "系统初始化")
+	flag.BoolVar(&P.IsToolMode, "tool", false, "工具模式")
+	flag.BoolVar(&P.Encrypt, "encrypt", false, "工具模式-加密")
+	flag.StringVar(&P.EncryptData, "data", "", "工具模式-加密数据")
 	flag.StringVar(&P.Env, "env", "dev", "当前环境[dev,prod]")
 	flag.IntVar(&P.Port, "port", 8080, "服务启动端口")
 	flag.StringVar(&P.MainStore, "mainStore", "mysql", "主存储[mysql,pgsql,oracle]")
 	flag.StringVar(&P.BackupStore, "backupStore", "", "备存储[mysql,pgsql,oracle]")
-	flag.StringVar(&P.StartKeyFile, "keyFile", "app.key", "系统启动KEY文件")
+	flag.StringVar(&P.AppKeyFile, "keyFile", "app.key", "系统启动KEY文件")
 	flag.Parse()
 }
 
-// GenKeyFile 生成系统启动文件（高敏感文件，需要较强的管理流程）
-func GenKeyFile() {
+// InitMode 系统初始化模式，生成系统启动文件（高敏感文件，需要较强的管理流程）
+func InitMode() {
 	rootKey := util.Generate32Str()
 	iv := util.Generate16Str()
 	digest := crypt.HmacDigest(CodeLevelProtectKey, rootKey+iv)
@@ -66,12 +72,15 @@ func GenKeyFile() {
 	keyFile := "app.key"
 	_, err = os.Stat(keyFile)
 	if err == nil {
-		panic(fmt.Sprintf("系统启动[app.key]文件已存在:%s", keyFile))
+		panic("请注意：系统启动文件[app.key]已存在，" +
+			"请确认是否需要重新生成，如果删除当前的[app.key]，历史的数据将无法正常使用！！" +
+			"如果确认生成新的[app.key]，请删除当前的")
 	}
 	err = os.WriteFile(keyFile, []byte(cipher), 0x600)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("系统启动文件[app.key]在当前目录已生成，该文件为敏感文件请妥善保管")
 }
 
 func AnalysisKeyFile(keyFile string) *Crypt {
@@ -97,4 +106,21 @@ func AnalysisKeyFile(keyFile string) *Crypt {
 		panic("系统启动[app.key]文件不正确(数据校验不通过)")
 	}
 	return crypto
+}
+
+// ToolMode 工具模式
+func ToolMode() {
+	if P.Encrypt {
+		if len(P.EncryptData) == 0 {
+			panic("加密模式没有提供加密数据,请使用[-data=\"xxx\"]提供加密数据")
+		}
+		key := []byte(P.RootKey)
+		iv := []byte(P.IV)
+		data := []byte(P.EncryptData)
+		cipher, err := crypt.Encrypt(key, iv, data)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("数据:%s,加密后密文:%s", P.EncryptData, cipher)
+	}
 }

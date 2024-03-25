@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/hex"
 	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/store/mysqlconf"
@@ -14,14 +13,9 @@ var SecretSvcIns = &SecretSvc{}
 var ServerSvcIns = &ServerSvc{}
 
 func InitSvc() {
-	rootKey, err := hex.DecodeString(cmd.P.RootKey)
-	if err != nil {
-		panic("解析rootKey失败")
-	}
-	iv, err := hex.DecodeString(cmd.P.IV)
-	if err != nil {
-		panic("解析IV失败")
-	}
+	rootKey := []byte(cmd.P.RootKey)
+	iv := []byte(cmd.P.IV)
+
 	SecretSvcIns.RootKey = rootKey
 	SecretSvcIns.IV = iv
 

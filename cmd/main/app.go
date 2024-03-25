@@ -12,14 +12,22 @@ import (
 
 func main() {
 	cmd.InitParam()
-	if cmd.P.Init {
-		cmd.GenKeyFile()
+	// 系统初始化模式，生成[app.key]
+	if cmd.P.IsInitMode {
 		fmt.Println("系统初始化模式")
+		cmd.InitMode()
 		return
 	}
-	crypt := cmd.AnalysisKeyFile(cmd.P.StartKeyFile)
+	// 加载解析[app.key]
+	crypt := cmd.AnalysisKeyFile(cmd.P.AppKeyFile)
 	cmd.P.Crypt = crypt
-	fmt.Printf("%+v\n", cmd.P)
+	// 工具模式
+	if cmd.P.IsToolMode {
+		fmt.Println("工具模式")
+		cmd.ToolMode()
+		return
+	}
+	// 正常启动Http服务
 	conf := serverconf.InitConfig()
 	log.InitLog(conf)
 	store.InitStore(conf)
