@@ -4,8 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/BurntSushi/toml"
+	"github.com/lidenger/otpserver/config"
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/util"
+	"github.com/nacos-group/nacos-sdk-go/v2/clients"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"os"
 )
 
@@ -17,15 +22,17 @@ var CodeLevelProtectIV = []byte("ad5457f8ea5711ee")
 
 // Param 命令参数
 type Param struct {
-	IsInitMode  bool   // 初始化模式
-	IsToolMode  bool   // 工具模式
-	Encrypt     bool   // 工具模式-加密数据
-	EncryptData string // 工具模式-加密的源数据
-	Env         string // dev,prod
-	Port        int    // 服务启动端口
-	MainStore   string // 主存储 mysql,pgsql,oracle
-	BackupStore string // 备存储 mysql,pgsql,oracle
-	AppKeyFile  string // app key file 路径
+	IsInitMode    bool   // 初始化模式
+	IsUseNacos    bool   // 初始化模式-启用Nacos配置中心
+	NacosConfFile string // 初始化模式-Nacos配置文件
+	IsToolMode    bool   // 工具模式
+	Encrypt       bool   // 工具模式-加密数据
+	EncryptData   string // 工具模式-加密的源数据
+	Env           string // dev,prod
+	Port          int    // 服务启动端口
+	MainStore     string // 主存储 mysql,pgsql,oracle
+	BackupStore   string // 备存储 mysql,pgsql,oracle
+	AppKeyFile    string // app key file 路径
 	*Crypt
 }
 
@@ -40,6 +47,8 @@ var P *Param
 func InitParam() {
 	P = &Param{}
 	flag.BoolVar(&P.IsInitMode, "init", false, "系统初始化")
+	flag.BoolVar(&P.IsUseNacos, "nacos", true, "启用Nacos配置中心")
+	flag.StringVar(&P.NacosConfFile, "nacosConf", "nacos.toml", "初始化模式-Nacos配置文件")
 	flag.BoolVar(&P.IsToolMode, "tool", false, "工具模式")
 	flag.BoolVar(&P.Encrypt, "encrypt", false, "工具模式-加密")
 	flag.StringVar(&P.EncryptData, "data", "", "工具模式-加密数据")
@@ -72,9 +81,10 @@ func InitMode() {
 	keyFile := "app.key"
 	_, err = os.Stat(keyFile)
 	if err == nil {
-		panic("请注意：系统启动文件[app.key]已存在，" +
+		fmt.Println("请注意：系统启动文件[app.key]已存在，" +
 			"请确认是否需要重新生成，如果删除当前的[app.key]，历史的数据将无法正常使用！！" +
 			"如果确认生成新的[app.key]，请删除当前的")
+		return
 	}
 	err = os.WriteFile(keyFile, []byte(cipher), 0x600)
 	if err != nil {
@@ -123,4 +133,65 @@ func ToolMode() {
 		}
 		fmt.Printf("数据:%s,加密后密文:%s", P.EncryptData, cipher)
 	}
+}
+
+// ConfigNacos nacos配置中心
+func ConfigNacos(nacosFile string) {
+	content, err := os.ReadFile(nacosFile)
+	if err != nil {
+		fmt.Printf("系统启动[nacos.toml]文件不正确(读取文件失败):%+v", err)
+		panic(err)
+	}
+	conf := &config.NacosM{}
+	_, err = toml.Decode(string(content), &conf)
+	// 配置client
+	cc := *constant.NewClientConfig(
+		constant.WithNamespaceId(conf.Client.NamespaceId),
+		constant.WithTimeoutMs(conf.Client.TimeoutMs),
+		constant.WithNotLoadCacheAtStart(true),
+		constant.WithLogDir(conf.Client.LogDir),
+		constant.WithCacheDir(conf.Client.CacheDir),
+		constant.WithLogLevel(conf.Client.LogLevel),
+	)
+	// 配置server
+	scSlice := make([]constant.ServerConfig, 0)
+	for _, server := range conf.ServerArr {
+		sone := *constant.NewServerConfig(server.Ip, server.Port, constant.WithContextPath(server.ContextPath))
+		scSlice = append(scSlice, sone)
+	}
+	sc := scSlice[:]
+	// create config client
+	client, err := clients.NewConfigClient(
+		vo.NacosClientParam{
+			ClientConfig:  &cc,
+			ServerConfigs: sc,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	c, err := client.GetConfig(vo.ConfigParam{
+		DataId: conf.Client.DataId,
+		Group:  conf.Client.Group,
+	})
+
+	m := &config.NacosM{}
+	_, err = toml.Decode(c, &m)
+
+	fmt.Printf("nacos config %+v", m)
+
+	err = client.ListenConfig(vo.ConfigParam{
+		DataId: conf.Client.DataId,
+		Group:  conf.Client.Group,
+		OnChange: func(namespace, group, dataId, data string) {
+			if group != conf.Client.Group || dataId != conf.Client.Group {
+				return
+			}
+			fmt.Println("config changed group:" + group + ", dataId:" + dataId + ", content:" + data)
+			_, err = toml.Decode(data, &m)
+			fmt.Printf("nacos config refresh %+v", c)
+		},
+	})
+	fmt.Println("nacos配置中心完成配置")
 }
