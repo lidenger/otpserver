@@ -11,6 +11,15 @@ func GenerateStr() string {
 	return strings.ReplaceAll(str.String(), "-", "")
 }
 
+func Generate32Str() string {
+	return GenerateStr()
+}
+
+func Generate16Str() string {
+	str := Generate32Str()
+	return str[0:16]
+}
+
 // GetArrFirstItem 获取数组第一个元素
 func GetArrFirstItem[T any](arr []*T) *T {
 	if len(arr) > 0 {

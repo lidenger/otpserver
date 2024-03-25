@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/config/store/mysqlconf"
@@ -47,30 +48,30 @@ func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
 }
 
 func InitStore(conf *serverconf.Config) {
-	cmd := serverconf.CMD
-	if cmd.MainStore == "" {
+	c := cmd.P
+	if c.MainStore == "" {
 		panic("主存储类型不能为空")
 	}
-	cmd.MainStore = strings.ToLower(cmd.MainStore)
-	cmd.BackupStore = strings.ToLower(cmd.BackupStore)
-	if cmd.MainStore == cmd.BackupStore {
+	c.MainStore = strings.ToLower(c.MainStore)
+	c.BackupStore = strings.ToLower(c.BackupStore)
+	if c.MainStore == c.BackupStore {
 		log.Warn("注意：主备存储设置一致，当前模式为弃用备存储!")
-		cmd.BackupStore = ""
+		c.BackupStore = ""
 	}
-	if cmd.MainStore == "mysql" || cmd.BackupStore == "mysql" {
+	if c.MainStore == "mysql" || c.BackupStore == "mysql" {
 		mysqlconf.InitMySQL(conf)
-	} else if cmd.MainStore == "pgsql" || cmd.BackupStore == "pgsql" {
+	} else if c.MainStore == "pgsql" || c.BackupStore == "pgsql" {
 		pgsqlconf.InitPgsql(conf)
 	} else {
-		panic("不支持的存储类型:" + cmd.MainStore)
+		panic("不支持的存储类型:" + c.MainStore)
 	}
 	builder := &strings.Builder{}
 	builder.WriteString("存储初始化完成,")
-	builder.WriteString(fmt.Sprintf("主存储:%s,", cmd.MainStore))
-	if cmd.BackupStore == "" {
+	builder.WriteString(fmt.Sprintf("主存储:%s,", c.MainStore))
+	if c.BackupStore == "" {
 		builder.WriteString("备存储:未启用")
 	} else {
-		builder.WriteString(fmt.Sprintf("备存储:%s,", cmd.BackupStore))
+		builder.WriteString(fmt.Sprintf("备存储:%s,", c.BackupStore))
 	}
 	log.Info("%s", builder.String())
 }

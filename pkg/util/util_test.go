@@ -32,3 +32,19 @@ func TestGetArrFirstItem(t *testing.T) {
 		t.Fatal()
 	}
 }
+
+func TestGenerate16Str(t *testing.T) {
+	str := Generate16Str()
+	t.Log(str)
+	if len(str) != 16 {
+		t.Fatal()
+	}
+}
+
+func TestGenerate32Str(t *testing.T) {
+	str := Generate32Str()
+	t.Log(str)
+	if len(str) != 32 {
+		t.Fatal()
+	}
+}

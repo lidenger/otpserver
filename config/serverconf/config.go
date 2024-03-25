@@ -2,10 +2,9 @@ package serverconf
 
 import (
 	_ "embed"
-	"encoding/hex"
-	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/lidenger/otpserver/cmd"
 )
 
 //go:embed dev.toml
@@ -49,36 +48,13 @@ type Config struct {
 
 func InitConfig() *Config {
 	var conf = devConf
-	if CMD.Env == "prod" {
+	if cmd.P.Env == "prod" {
 		conf = prodConf
 	}
 	config := &Config{}
 	_, err := toml.Decode(conf, &config)
 	if err != nil {
-		panic(fmt.Sprintf("加载%s配置文件失败:%+v", CMD.Env, err))
+		panic(fmt.Sprintf("加载%s配置文件失败:%+v", cmd.P.Env, err))
 	}
 	return config
-}
-
-// CmdParam 命令参数
-type CmdParam struct {
-	Env         string // dev,prod
-	Port        int    // 服务启动端口
-	MainStore   string // 主存储 mysql,pgsql,oracle
-	BackupStore string // 备存储 mysql,pgsql,oracle
-	RootKey     string // 根密钥
-	IV          string // CBC IV
-}
-
-var CMD *CmdParam
-
-func InitCmdParam() {
-	CMD = &CmdParam{}
-	flag.StringVar(&CMD.Env, "env", "dev", "当前环境[dev,prod]")
-	flag.IntVar(&CMD.Port, "port", 8080, "服务启动端口")
-	flag.StringVar(&CMD.MainStore, "mainStore", "mysql", "主存储[mysql,pgsql,oracle]")
-	flag.StringVar(&CMD.BackupStore, "backupStore", "", "备存储[mysql,pgsql,oracle]")
-	flag.StringVar(&CMD.RootKey, "rootKey", hex.EncodeToString([]byte("12345678901234561234567890123456")), "服务根密钥")
-	flag.StringVar(&CMD.IV, "iv", hex.EncodeToString([]byte("1234567890123456")), "CBC IV")
-	flag.Parse()
 }
