@@ -19,7 +19,7 @@ type Config struct {
 		Port     int    `toml:"port"`
 		RootPath string `toml:"rootPath"`
 		ReqLimit int    `toml:"reqLimit"`
-	}
+	} `toml:"server"`
 	Log struct {
 		Level      string `toml:"level"`
 		RootPath   string `toml:"rootPath"`
@@ -29,11 +29,11 @@ type Config struct {
 		MaxBackups int    `toml:"maxBackups"`
 		MaxAge     int    `toml:"maxAge"`
 		Compress   bool   `toml:"compress"`
-	}
+	} `toml:"log"`
 	Store struct {
 		MainStore   string `toml:"mainStore"`
 		BackupStore string `toml:"backupStore"`
-	}
+	} `toml:"store"`
 	MySQL struct {
 		Address         string `toml:"address"`
 		UserName        string `toml:"userName"`
@@ -43,7 +43,7 @@ type Config struct {
 		MaxIdleConn     int    `toml:"maxIdleConn"`
 		MaxOpenConn     int    `toml:"maxOpenConn"`
 		ConnMaxWaitTime string `toml:"connMaxWaitTime"`
-	}
+	} `toml:"mysql"`
 }
 
 func InitConfig() *Config {
