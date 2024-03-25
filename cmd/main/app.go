@@ -27,6 +27,10 @@ func main() {
 		cmd.ToolMode()
 		return
 	}
+	// 启用nacos配置中心
+	if cmd.P.IsUseNacos {
+		cmd.ConfigNacos(cmd.P.NacosConfFile)
+	}
 	// 正常启动Http服务
 	conf := serverconf.InitConfig()
 	log.InitLog(conf)

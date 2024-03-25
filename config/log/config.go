@@ -2,7 +2,7 @@ package log
 
 import (
 	"fmt"
-	"github.com/lidenger/otpserver/config/serverconf"
+	"github.com/lidenger/otpserver/config"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -13,7 +13,7 @@ import (
 var zapLogger *zap.Logger
 var HttpZapLogger *zap.Logger
 
-func InitLog(conf *serverconf.Config) {
+func InitLog(conf *config.M) {
 	level, err := zap.ParseAtomicLevel(conf.Log.Level)
 	if err != nil {
 		panic(fmt.Sprintf("日志Level设置错误:%+v", err))
@@ -47,7 +47,7 @@ func Error(template string, args ...any) {
 }
 
 // rotatedConf 日志翻滚切割配置
-func rotatedConf(conf *serverconf.Config) *lumberjack.Logger {
+func rotatedConf(conf *config.M) *lumberjack.Logger {
 	rotatedWriter := &lumberjack.Logger{
 		Filename:   conf.Log.RootPath + conf.Log.AppFile,
 		MaxSize:    conf.Log.MaxSize,
@@ -72,7 +72,7 @@ func encoderConf() zapcore.EncoderConfig {
 	return encoderConfig
 }
 
-func initHttpLog(conf *serverconf.Config) {
+func initHttpLog(conf *config.M) {
 	loggerWriter := httpRotatedConf(conf)
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(httpEncoderConf()),
@@ -83,7 +83,7 @@ func initHttpLog(conf *serverconf.Config) {
 }
 
 // httpRotatedConf 日志翻滚切割配置
-func httpRotatedConf(conf *serverconf.Config) *lumberjack.Logger {
+func httpRotatedConf(conf *config.M) *lumberjack.Logger {
 	rotatedWriter := &lumberjack.Logger{
 		Filename:   conf.Log.RootPath + conf.Log.HttpFile,
 		MaxSize:    conf.Log.MaxSize,

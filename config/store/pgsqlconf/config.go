@@ -1,12 +1,12 @@
 package pgsqlconf
 
 import (
-	"github.com/lidenger/otpserver/config/serverconf"
+	"github.com/lidenger/otpserver/config"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
-func InitPgsql(conf *serverconf.Config) {
+func InitPgsql(conf *config.M) {
 
 }
