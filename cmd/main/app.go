@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/internal/router"
@@ -10,7 +11,15 @@ import (
 )
 
 func main() {
-	serverconf.InitCmdParam()
+	cmd.InitParam()
+	if cmd.P.Init {
+		cmd.GenKeyFile()
+		fmt.Println("系统初始化模式")
+		return
+	}
+	crypt := cmd.AnalysisKeyFile(cmd.P.StartKeyFile)
+	cmd.P.Crypt = crypt
+	fmt.Printf("%+v\n", cmd.P)
 	conf := serverconf.InitConfig()
 	log.InitLog(conf)
 	store.InitStore(conf)
