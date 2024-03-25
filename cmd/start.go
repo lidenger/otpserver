@@ -22,17 +22,15 @@ var CodeLevelProtectIV = []byte("ad5457f8ea5711ee")
 
 // Param 命令参数
 type Param struct {
-	IsInitMode    bool   // 初始化模式
-	IsUseNacos    bool   // 初始化模式-启用Nacos配置中心
-	NacosConfFile string // 初始化模式-Nacos配置文件
-	IsToolMode    bool   // 工具模式
-	Encrypt       bool   // 工具模式-加密数据
-	EncryptData   string // 工具模式-加密的源数据
-	Env           string // dev,prod
-	Port          int    // 服务启动端口
-	MainStore     string // 主存储 mysql,pgsql,oracle
-	BackupStore   string // 备存储 mysql,pgsql,oracle
-	AppKeyFile    string // app key file 路径
+	IsInitMode  bool   // 初始化模式
+	IsToolMode  bool   // 工具模式
+	Encrypt     bool   // 工具模式-加密数据
+	EncryptData string // 工具模式-加密的源数据
+	ConfSource  string // 配置来源 nacos,local,default
+	ConfFile    string // 配置文件
+	MainStore   string // 主存储 mysql,pgsql,oracle
+	BackupStore string // 备存储 mysql,pgsql,oracle
+	AppKeyFile  string // app key file 路径
 	*Crypt
 }
 
@@ -47,16 +45,14 @@ var P *Param
 func InitParam() {
 	P = &Param{}
 	flag.BoolVar(&P.IsInitMode, "init", false, "系统初始化")
-	flag.BoolVar(&P.IsUseNacos, "nacos", true, "启用Nacos配置中心")
-	flag.StringVar(&P.NacosConfFile, "nacosConf", "nacos.toml", "初始化模式-Nacos配置文件")
+	flag.StringVar(&P.ConfSource, "confSource", "default", "配置来源[nacos,local,default]")
+	flag.StringVar(&P.ConfFile, "confFile", "", "配置文件")
 	flag.BoolVar(&P.IsToolMode, "tool", false, "工具模式")
 	flag.BoolVar(&P.Encrypt, "encrypt", false, "工具模式-加密")
 	flag.StringVar(&P.EncryptData, "data", "", "工具模式-加密数据")
-	flag.StringVar(&P.Env, "env", "dev", "当前环境[dev,prod]")
-	flag.IntVar(&P.Port, "port", 8080, "服务启动端口")
 	flag.StringVar(&P.MainStore, "mainStore", "mysql", "主存储[mysql,pgsql,oracle]")
 	flag.StringVar(&P.BackupStore, "backupStore", "", "备存储[mysql,pgsql,oracle]")
-	flag.StringVar(&P.AppKeyFile, "keyFile", "app.key", "系统启动KEY文件")
+	flag.StringVar(&P.AppKeyFile, "keyFile", "app.key", "系统启动KEY文件[app.key]")
 	flag.Parse()
 }
 
@@ -90,7 +86,7 @@ func InitMode() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("系统启动文件[app.key]在当前目录已生成，该文件为敏感文件请妥善保管")
+	fmt.Println("系统启动文件[app.key]在当前目录生成完成，该文件为敏感文件请妥善保管")
 }
 
 func AnalysisKeyFile(keyFile string) *Crypt {
@@ -135,11 +131,12 @@ func ToolMode() {
 	}
 }
 
-// ConfigNacos nacos配置中心
-func ConfigNacos(nacosFile string) {
-	content, err := os.ReadFile(nacosFile)
+// LoadConfByNacos 从Nacos配置中心加载配置
+// https://github.com/nacos-group/nacos-sdk-go
+func LoadConfByNacos(confFile string) *config.M {
+	content, err := os.ReadFile(confFile)
 	if err != nil {
-		fmt.Printf("系统启动[nacos.toml]文件不正确(读取文件失败):%+v", err)
+		fmt.Printf("Nacos配置文件[%s]不正确(读取文件失败):%+v", confFile, err)
 		panic(err)
 	}
 	conf := &config.NacosM{}
@@ -176,10 +173,8 @@ func ConfigNacos(nacosFile string) {
 		Group:  conf.Client.Group,
 	})
 
-	m := &config.NacosM{}
+	m := &config.M{}
 	_, err = toml.Decode(c, &m)
-
-	fmt.Printf("nacos config %+v", m)
 
 	err = client.ListenConfig(vo.ConfigParam{
 		DataId: conf.Client.DataId,
@@ -193,5 +188,17 @@ func ConfigNacos(nacosFile string) {
 			fmt.Printf("nacos config refresh %+v", c)
 		},
 	})
-	fmt.Println("nacos配置中心完成配置")
+	return m
+}
+
+// LoadConfByLocalFile 从本地文件加载配置
+func LoadConfByLocalFile(confFile string) *config.M {
+	content, err := os.ReadFile(confFile)
+	if err != nil {
+		fmt.Printf("Nacos配置文件[nacos.toml]不正确(读取文件失败):%+v", err)
+		panic(err)
+	}
+	m := &config.M{}
+	_, err = toml.Decode(string(content), &m)
+	return m
 }

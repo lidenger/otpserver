@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/lidenger/otpserver/cmd"
+	"github.com/lidenger/otpserver/config"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/internal/router"
@@ -27,12 +28,9 @@ func main() {
 		cmd.ToolMode()
 		return
 	}
-	// 启用nacos配置中心
-	if cmd.P.IsUseNacos {
-		cmd.ConfigNacos(cmd.P.NacosConfFile)
-	}
+	// 加载配置文件
+	conf := loadConfig()
 	// 正常启动Http服务
-	conf := serverconf.InitConfig()
 	log.InitLog(conf)
 	store.InitStore(conf)
 	service.InitSvc()
@@ -42,4 +40,29 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func loadConfig() *config.M {
+	var conf *config.M
+	confFile := cmd.P.ConfFile
+	switch cmd.P.ConfSource {
+	case "nacos":
+		if len(confFile) == 0 {
+			confFile = "nacos.toml"
+		}
+		conf = cmd.LoadConfByNacos(confFile)
+		fmt.Println("从nacos加载配置完成")
+	case "local":
+		if len(confFile) == 0 {
+			confFile = "app.toml"
+		}
+		conf = cmd.LoadConfByLocalFile(confFile)
+		fmt.Println("从本地文件加载配置完成")
+	case "default":
+		conf = serverconf.InitConfig()
+		fmt.Println("从系统默认配置文件加载配置完成")
+	default:
+		panic(fmt.Sprintf("未知的配置来源:%s", cmd.P.ConfSource))
+	}
+	return conf
 }
