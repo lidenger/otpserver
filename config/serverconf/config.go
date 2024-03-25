@@ -11,21 +11,14 @@ import (
 	"strings"
 )
 
-//go:embed dev.toml
-var devConf string
-
-//go:embed prod.toml
-var prodConf string
+//go:embed app.toml
+var appConfig string
 
 func InitConfig() *conf.M {
-	var c = devConf
-	if cmd.P.Env == "prod" {
-		c = prodConf
-	}
 	config := &conf.M{}
-	_, err := toml.Decode(c, &config)
+	_, err := toml.Decode(appConfig, &config)
 	if err != nil {
-		panic(fmt.Sprintf("加载%s配置文件失败:%+v", cmd.P.Env, err))
+		panic(fmt.Sprintf("加载配置文件[app.toml]失败:%+v", err))
 	}
 	reValue := reflect.ValueOf(config).Elem()
 	reType := reflect.TypeOf(config).Elem()
