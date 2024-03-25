@@ -27,7 +27,7 @@ backupStore = ""
 [mysql]
 address = "127.0.0.1:3306"
 userName = "root"
-"password@cipher" = "12345678"
+"password@cipher" = "636f39dc70f3a094ea4f0377a893b0a3"
 dbName = "otp"
 # 连接可复用的最大时间,分钟
 connMaxLifeTime = 30

@@ -6,8 +6,8 @@ import (
 )
 
 type Time struct {
-	CreateTime time.Time `gorm:"column:create_time" json:"create_time"`
-	UpdateTime time.Time `gorm:"column:update_time" json:"update_time"`
+	CreateTime time.Time `gorm:"column:create_time" json:"createTime"`
+	UpdateTime time.Time `gorm:"column:update_time" json:"updateTime"`
 }
 
 func (t *Time) BeforeCreate(tx *gorm.DB) (err error) {
@@ -23,7 +23,7 @@ func (t *Time) BeforeUpdate(tx *gorm.DB) (err error) {
 }
 
 type Common struct {
-	IsEnable uint8 `gorm:"column:is_enable" json:"is_enable"` // 是否启用，1启用，2禁用
+	IsEnable uint8 `gorm:"column:is_enable" json:"isEnable"` // 是否启用，1启用，2禁用
 	Time
 }
 
