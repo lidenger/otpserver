@@ -57,19 +57,33 @@ func (s *ServerSvc) NewServerModel(p *param.ServerParam) (*model.ServerModel, er
 	if m.IsEnable == 0 {
 		m.IsEnable = 1
 	}
+	// 默认不启用操作敏感信息
+	if m.IsOperateSensitiveData == 0 {
+		m.IsOperateSensitiveData = 2
+	}
+	// 服务密钥
+	secret := util.Generate32Str()
 	var err error
-	m.Secret, err = genSecret(s.RootKey, s.IV)
+	secretCipher, err := crypt.Encrypt(s.RootKey, s.IV, []byte(secret))
 	if err != nil {
 		return nil, err
 	}
+	m.Secret = secretCipher
+	// 服务密钥IV
+	iv := util.Generate16Str()
+	ivCipher, err := crypt.Encrypt(s.RootKey, s.IV, []byte(iv))
+	if err != nil {
+		return nil, err
+	}
+	m.IV = ivCipher
 	// 计算数据摘要
-	m.DataCheck = s.CalcDataCheckSum(m.IsEnable, m.Sign, m.Secret)
+	m.DataCheck = s.CalcDataCheckSum(m)
 	return m, nil
 }
 
 // CalcDataCheckSum 计算数据校验和
-func (s *ServerSvc) CalcDataCheckSum(isEnable uint8, sign, secretCipher string) string {
-	data := fmt.Sprintf("%d,%s,%s", isEnable, sign, secretCipher)
+func (s *ServerSvc) CalcDataCheckSum(m *model.ServerModel) string {
+	data := fmt.Sprintf("%d,%d,%s,%s,%s", m.IsEnable, m.IsOperateSensitiveData, m.Sign, m.Secret, m.IV)
 	return crypt.HmacDigest(s.RootKey, data)
 }
 
@@ -120,15 +134,22 @@ func findServerByStore(ctx context.Context, sign string, s store.ServerStore) (*
 
 // CheckModel 校验数据,解密账号密钥密文
 func (s *ServerSvc) CheckModel(ctx context.Context, m *model.ServerModel) error {
-	check := s.CalcDataCheckSum(m.IsEnable, m.Sign, m.Secret)
+	check := s.CalcDataCheckSum(m)
 	if m.DataCheck != check {
 		msg := fmt.Sprintf("服务数据校验不通过,疑似被篡改,请关注(ID:%d,sign:%s)", m.ID, m.Sign)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
+	// 服务密钥
 	secret, err := crypt.Decrypt(s.RootKey, s.IV, m.Secret)
 	if err != nil {
 		return otperr.ErrDecrypt(err)
 	}
 	m.Secret = string(secret)
+	// 服务密钥IV
+	iv, err := crypt.Decrypt(s.RootKey, s.IV, m.IV)
+	if err != nil {
+		return otperr.ErrDecrypt(err)
+	}
+	m.IV = string(iv)
 	return nil
 }

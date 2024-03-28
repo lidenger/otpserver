@@ -34,8 +34,8 @@ func api(g *gin.Engine) {
 		{
 			serverv1 := adminv1.Group("/server") // 接入服务
 			{
-				serverv1.POST("", handler.AddServer)
-				serverv1.GET(":sign", handler.GetServer)
+				serverv1.POST("", handler.AddServer)     // 新增服务
+				serverv1.GET(":sign", handler.GetServer) // 获取服务信息
 			}
 		}
 	}
