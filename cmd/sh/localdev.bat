@@ -7,8 +7,8 @@ echo start
 cd ..
 cd ..
 
-if exist app.key (echo app.key exists) else (copy .\config\serverconf\app.key app.key)
+if exist app.key (echo app.key exists) else (copy .\config\localdev\app.key app.key)
 if exist app.toml (echo app.toml exists) else (copy .\config\serverconf\app.toml app.toml)
-if exist nacos.toml (echo app.key exists) else (copy .\config\serverconf\nacos.toml nacos.toml)
+if exist nacos.toml (echo app.key exists) else (copy .\config\localdev\nacos.toml nacos.toml)
 
 echo finish
