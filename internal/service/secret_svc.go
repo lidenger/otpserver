@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
@@ -14,7 +15,6 @@ import (
 )
 
 type SecretSvc struct {
-	Crypt
 	Store       store.SecretStore // 主存储
 	StoreBackup store.SecretStore // 备存储
 }
@@ -54,7 +54,7 @@ func (s *SecretSvc) NewSecretModel(account string) (*model.AccountSecretModel, e
 	m.IsEnable = 1
 	// 密钥加密存储
 	var err error
-	m.SecretSeed, err = genSecret(s.RootKey, s.IV)
+	m.SecretSeed, err = genSecret(cmd.P.RootKey192, cmd.P.IV)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (s *SecretSvc) CheckModel(ctx context.Context, m *model.AccountSecretModel)
 		msg := fmt.Sprintf("账号密钥数据校验不通过,疑似被篡改,请关注(ID:%d,账号:%s)", m.ID, m.Account)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
-	secret, err := crypt.Decrypt(s.RootKey, s.IV, m.SecretSeed)
+	secret, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.SecretSeed)
 	if err != nil {
 		return otperr.ErrDecrypt(err)
 	}
@@ -127,5 +127,5 @@ func findByStore(ctx context.Context, account string, s store.SecretStore) (*mod
 // CalcDataCheckSum 计算数据校验和
 func (s *SecretSvc) CalcDataCheckSum(isEnable uint8, account, secretSeedCipher string) string {
 	data := fmt.Sprintf("%d,%s,%s", isEnable, account, secretSeedCipher)
-	return crypt.HmacDigest(s.RootKey, data)
+	return crypt.HmacDigest(cmd.P.RootKey192, data)
 }

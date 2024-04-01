@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//go:embed app.toml
+//go:embed ../localdev/app.toml
 var appConfig string
 
 func InitConfig() *conf.M {
@@ -32,7 +32,7 @@ func recursionDecrypt(typ reflect.Type, val reflect.Value, tomlTag string) {
 	if val.Kind().String() != "struct" {
 		// 解密
 		if strings.Contains(tomlTag, "@cipher") {
-			key := []byte(cmd.P.RootKey)
+			key := []byte(cmd.P.RootKey256)
 			iv := []byte(cmd.P.IV)
 			data, err := crypt.Decrypt(key, iv, val.String())
 			if err != nil {

@@ -41,6 +41,14 @@ func TestGenerate16Str(t *testing.T) {
 	}
 }
 
+func TestGenerate24Str(t *testing.T) {
+	str := Generate24Str()
+	t.Log(str)
+	if len(str) != 24 {
+		t.Fatal()
+	}
+}
+
 func TestGenerate32Str(t *testing.T) {
 	str := Generate32Str()
 	t.Log(str)

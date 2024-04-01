@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
@@ -14,7 +15,6 @@ import (
 )
 
 type ServerSvc struct {
-	Crypt
 	Store       store.ServerStore // 主存储
 	StoreBackup store.ServerStore // 备存储
 }
@@ -64,14 +64,14 @@ func (s *ServerSvc) NewServerModel(p *param.ServerParam) (*model.ServerModel, er
 	// 服务密钥
 	secret := util.Generate32Str()
 	var err error
-	secretCipher, err := crypt.Encrypt(s.RootKey, s.IV, []byte(secret))
+	secretCipher, err := crypt.Encrypt(cmd.P.RootKey192, cmd.P.IV, []byte(secret))
 	if err != nil {
 		return nil, err
 	}
 	m.Secret = secretCipher
 	// 服务密钥IV
 	iv := util.Generate16Str()
-	ivCipher, err := crypt.Encrypt(s.RootKey, s.IV, []byte(iv))
+	ivCipher, err := crypt.Encrypt(cmd.P.RootKey192, cmd.P.IV, []byte(iv))
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (s *ServerSvc) NewServerModel(p *param.ServerParam) (*model.ServerModel, er
 // CalcDataCheckSum 计算数据校验和
 func (s *ServerSvc) CalcDataCheckSum(m *model.ServerModel) string {
 	data := fmt.Sprintf("%d,%d,%s,%s,%s", m.IsEnable, m.IsOperateSensitiveData, m.Sign, m.Secret, m.IV)
-	return crypt.HmacDigest(s.RootKey, data)
+	return crypt.HmacDigest(cmd.P.RootKey192, data)
 }
 
 // IsExists 账号密钥是否存在
@@ -140,13 +140,13 @@ func (s *ServerSvc) CheckModel(ctx context.Context, m *model.ServerModel) error 
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
 	// 服务密钥
-	secret, err := crypt.Decrypt(s.RootKey, s.IV, m.Secret)
+	secret, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.Secret)
 	if err != nil {
 		return otperr.ErrDecrypt(err)
 	}
 	m.Secret = string(secret)
 	// 服务密钥IV
-	iv, err := crypt.Decrypt(s.RootKey, s.IV, m.IV)
+	iv, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.IV)
 	if err != nil {
 		return otperr.ErrDecrypt(err)
 	}

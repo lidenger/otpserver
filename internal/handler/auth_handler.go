@@ -22,7 +22,8 @@ func GetAccessToken(c *gin.Context) {
 	if !verifyToken(c, m) {
 		return
 	}
-
+	token, err := service.GenAccessToken(m.Sign)
+	result.R(c, err, token)
 }
 
 // 验证服务sign

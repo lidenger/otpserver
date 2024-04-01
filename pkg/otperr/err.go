@@ -28,7 +28,14 @@ func (e *Err) GetCode() code.CODE {
 }
 
 // ErrParamIllegal 非法参数
-func ErrParamIllegal(err error) IErr {
+func ErrParamIllegal(param any) IErr {
+	var err error
+	if x, ok := param.(error); ok {
+		err = x
+	}
+	if x, ok := param.(string); ok {
+		err = errors.New(x)
+	}
 	return &Err{
 		error:    err,
 		httpCode: http.StatusBadRequest,
