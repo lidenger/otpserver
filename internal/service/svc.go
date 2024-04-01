@@ -8,11 +8,6 @@ import (
 	"github.com/lidenger/otpserver/pkg/util"
 )
 
-type Crypt struct {
-	RootKey []byte // 根密钥
-	IV      []byte
-}
-
 // 生成密钥
 func genSecret(rootKey, iv []byte) (string, error) {
 	secret := util.GenerateStr()

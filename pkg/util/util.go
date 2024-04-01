@@ -15,6 +15,11 @@ func Generate32Str() string {
 	return GenerateStr()
 }
 
+func Generate24Str() string {
+	str := Generate32Str()
+	return str[0:24]
+}
+
 func Generate16Str() string {
 	str := Generate32Str()
 	return str[0:16]

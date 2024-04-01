@@ -13,14 +13,6 @@ var SecretSvcIns = &SecretSvc{}
 var ServerSvcIns = &ServerSvc{}
 
 func InitSvc() {
-	rootKey := []byte(cmd.P.RootKey)
-	iv := []byte(cmd.P.IV)
-
-	SecretSvcIns.RootKey = rootKey
-	SecretSvcIns.IV = iv
-
-	ServerSvcIns.RootKey = rootKey
-	ServerSvcIns.IV = iv
 
 	switch cmd.P.MainStore {
 	case "mysql":

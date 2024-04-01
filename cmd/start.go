@@ -35,9 +35,11 @@ type Param struct {
 }
 
 type Crypt struct {
-	RootKey   string // 根密钥
-	IV        string // CBC IV
-	DataCheck string // 数据校验
+	RootKey128 []byte // 128位根密钥
+	RootKey192 []byte // 192位根密钥
+	RootKey256 []byte // 256位根密钥
+	IV         []byte // CBC IV
+	DataCheck  string // 数据校验
 }
 
 var P *Param
@@ -58,13 +60,17 @@ func InitParam() {
 
 // InitMode 系统初始化模式，生成系统启动文件（高敏感文件，需要较强的管理流程）
 func InitMode() {
-	rootKey := util.Generate32Str()
+	rootKey128 := util.Generate16Str()
+	rootKey192 := util.Generate24Str()
+	rootKey256 := util.Generate32Str()
 	iv := util.Generate16Str()
-	digest := crypt.HmacDigest(CodeLevelProtectKey, rootKey+iv)
+	digest := crypt.HmacDigest(CodeLevelProtectKey, rootKey128+rootKey192+rootKey256+iv)
 	crypto := &Crypt{
-		RootKey:   rootKey,
-		IV:        iv,
-		DataCheck: digest,
+		RootKey128: []byte(rootKey128),
+		RootKey192: []byte(rootKey192),
+		RootKey256: []byte(rootKey256),
+		IV:         []byte(iv),
+		DataCheck:  digest,
 	}
 	content, err := json.Marshal(crypto)
 	if err != nil {
@@ -107,7 +113,8 @@ func AnalysisKeyFile(keyFile string) *Crypt {
 		panic(err)
 	}
 	// 对比数据摘要
-	digest := crypt.HmacDigest(CodeLevelProtectKey, crypto.RootKey+crypto.IV)
+	d := string(crypto.RootKey128) + string(crypto.RootKey192) + string(crypto.RootKey256) + string(crypto.IV)
+	digest := crypt.HmacDigest(CodeLevelProtectKey, d)
 	if digest != crypto.DataCheck {
 		panic("系统启动[app.key]文件不正确(数据校验不通过)")
 	}
@@ -120,10 +127,8 @@ func ToolMode() {
 		if len(P.EncryptData) == 0 {
 			panic("加密模式没有提供加密数据,请使用[-data=\"xxx\"]提供加密数据")
 		}
-		key := []byte(P.RootKey)
-		iv := []byte(P.IV)
 		data := []byte(P.EncryptData)
-		cipher, err := crypt.Encrypt(key, iv, data)
+		cipher, err := crypt.Encrypt(P.RootKey256, P.IV, data)
 		if err != nil {
 			panic(err)
 		}

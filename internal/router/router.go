@@ -21,6 +21,8 @@ func api(g *gin.Engine) {
 
 	v1 := g.Group("/v1")
 	{
+		v1.GET("/accessToken", handler.GetAccessToken) // 获取access token
+
 		secretv1 := v1.Group("/secret") // 账号密钥
 		secretv1.Use(middleware.ServerAuth)
 		{
