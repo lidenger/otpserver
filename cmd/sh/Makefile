@@ -12,5 +12,5 @@ build:
 .PHONE: localdev
 localdev:
 	cp ../../config/localdev/app.key ../../app.key
-	cp ../../config/localdev/app.toml ../../app.toml
+	cp ../../config/serverconf/app.toml ../../app.toml
 	cp ../../config/localdev/nacos.toml ../../nacos.toml
