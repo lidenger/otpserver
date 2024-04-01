@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-//go:embed ../localdev/app.toml
+//go:embed app.toml
 var appConfig string
 
 func InitConfig() *conf.M {
