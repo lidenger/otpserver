@@ -2,12 +2,13 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lidenger/otpserver/config"
+	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/internal/handler"
 	"github.com/lidenger/otpserver/internal/middleware"
 )
 
-func InitRouter(conf *config.M) *gin.Engine {
+func InitRouter() *gin.Engine {
+	conf := serverconf.GetSysConf()
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.Default()
 	g.Use(middleware.ReqLimit(conf.Server.ReqLimit))
@@ -22,7 +23,7 @@ func api(g *gin.Engine) {
 	v1 := g.Group("/v1")
 	{
 		v1.GET("/accessToken", handler.GetAccessToken)           // 获取access token
-		v1.GET("/accessToken/verify", handler.VerifyAccessToken) // 获取access token
+		v1.GET("/accessToken/verify", handler.VerifyAccessToken) // 验证access token
 
 		secretv1 := v1.Group("/secret") // 账号密钥
 		secretv1.Use(middleware.ServerAuth)

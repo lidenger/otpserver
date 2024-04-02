@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"github.com/lidenger/otpserver/config"
+	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -13,7 +14,8 @@ import (
 var zapLogger *zap.Logger
 var HttpZapLogger *zap.Logger
 
-func InitLog(conf *config.M) {
+func InitLog() {
+	conf := serverconf.GetSysConf()
 	level, err := zap.ParseAtomicLevel(conf.Log.Level)
 	if err != nil {
 		panic(fmt.Sprintf("日志Level设置错误:%+v", err))

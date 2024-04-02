@@ -27,15 +27,15 @@ func main() {
 		cmd.ToolMode()
 		return
 	}
-	// 加载配置文件
-	conf := serverconf.GetSysConf()
 	// 正常启动Http服务
-	log.InitLog(conf)
-	store.InitStore(conf)
+	serverconf.InitSysConf()
+	log.InitLog()
+	store.InitStore()
 	service.InitSvc()
-	g := router.InitRouter(conf)
-	log.Info("Http服务已启动,端口:%d", conf.Server.Port)
-	err := g.Run(fmt.Sprintf("0.0.0.0:%d", conf.Server.Port))
+	g := router.InitRouter()
+	httpPort := serverconf.GetSysConf().Server.Port
+	log.Info("Http服务已启动,端口:%d", httpPort)
+	err := g.Run(fmt.Sprintf("0.0.0.0:%d", httpPort))
 	if err != nil {
 		panic(err)
 	}

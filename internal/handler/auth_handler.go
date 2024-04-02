@@ -14,8 +14,8 @@ import (
 )
 
 // GetAccessToken 获取AccessToken
-// sign 服务标识，添加服务时指定的标识
-// token AES(KEY+IV, UNIX时间戳)
+// serverSign 服务标识，添加服务时指定的标识
+// timeToken AES(KEY+IV, UNIX时间戳)
 func GetAccessToken(c *gin.Context) {
 	success, m := verifySign(c)
 	if !success {
@@ -40,12 +40,9 @@ func VerifyAccessToken(c *gin.Context) {
 		result.ParamErr(c, "access token错误:"+err.Error())
 		return
 	}
-	diff := time.Now().Unix() - tokenM.CreateTime
-	conf := serverconf.GetSysConf()
-	validHour := int64(conf.Server.AccessTokenValidHour)
-	if diff > validHour*3600 {
-		msg := fmt.Sprintf("access token已过期,有效期:%d", validHour)
-		result.ParamErr(c, msg)
+	err = service.VerifyAccessTokenM(tokenM)
+	if err != nil {
+		result.ParamErr(c, err.Error())
 		return
 	}
 	result.R(c, nil, "1")
