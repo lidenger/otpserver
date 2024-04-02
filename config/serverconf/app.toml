@@ -4,6 +4,10 @@ port = 8066
 rootPath = ""
 # 限速QPS
 reqLimit = 100
+# access token有效期(小时)
+accessTokenValidHour = 4
+# time token有效期(分钟)
+timeTokenValidMinute = 2
 
 [log]
 # debug info error

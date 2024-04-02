@@ -4,13 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/lidenger/otpserver/config"
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/util"
-	"github.com/nacos-group/nacos-sdk-go/v2/clients"
-	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"os"
 )
 
@@ -134,76 +129,4 @@ func ToolMode() {
 		}
 		fmt.Printf("数据:%s,加密后密文:%s", P.EncryptData, cipher)
 	}
-}
-
-// LoadConfByNacos 从Nacos配置中心加载配置
-// https://github.com/nacos-group/nacos-sdk-go
-func LoadConfByNacos(confFile string) *config.M {
-	content, err := os.ReadFile(confFile)
-	if err != nil {
-		fmt.Printf("Nacos配置文件[%s]不正确(读取文件失败):%+v", confFile, err)
-		panic(err)
-	}
-	conf := &config.NacosM{}
-	_, err = toml.Decode(string(content), &conf)
-	// 配置client
-	cc := *constant.NewClientConfig(
-		constant.WithNamespaceId(conf.Client.NamespaceId),
-		constant.WithTimeoutMs(conf.Client.TimeoutMs),
-		constant.WithNotLoadCacheAtStart(true),
-		constant.WithLogDir(conf.Client.LogDir),
-		constant.WithCacheDir(conf.Client.CacheDir),
-		constant.WithLogLevel(conf.Client.LogLevel),
-	)
-	// 配置server
-	scSlice := make([]constant.ServerConfig, 0)
-	for _, server := range conf.ServerArr {
-		sone := *constant.NewServerConfig(server.Ip, server.Port, constant.WithContextPath(server.ContextPath))
-		scSlice = append(scSlice, sone)
-	}
-	sc := scSlice[:]
-	// create config client
-	client, err := clients.NewConfigClient(
-		vo.NacosClientParam{
-			ClientConfig:  &cc,
-			ServerConfigs: sc,
-		},
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	c, err := client.GetConfig(vo.ConfigParam{
-		DataId: conf.Client.DataId,
-		Group:  conf.Client.Group,
-	})
-
-	m := &config.M{}
-	_, err = toml.Decode(c, &m)
-
-	err = client.ListenConfig(vo.ConfigParam{
-		DataId: conf.Client.DataId,
-		Group:  conf.Client.Group,
-		OnChange: func(namespace, group, dataId, data string) {
-			if group != conf.Client.Group || dataId != conf.Client.Group {
-				return
-			}
-			fmt.Println("config changed group:" + group + ", dataId:" + dataId + ", content:" + data)
-			_, err = toml.Decode(data, &m)
-			fmt.Printf("nacos config refresh %+v", c)
-		},
-	})
-	return m
-}
-
-// LoadConfByLocalFile 从本地文件加载配置
-func LoadConfByLocalFile(confFile string) *config.M {
-	content, err := os.ReadFile(confFile)
-	if err != nil {
-		fmt.Printf("Nacos配置文件[nacos.toml]不正确(读取文件失败):%+v", err)
-		panic(err)
-	}
-	m := &config.M{}
-	_, err = toml.Decode(string(content), &m)
-	return m
 }
