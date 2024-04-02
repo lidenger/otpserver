@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/service"
 	"github.com/lidenger/otpserver/pkg/crypt"
@@ -19,18 +21,41 @@ func GetAccessToken(c *gin.Context) {
 	if !success {
 		return
 	}
-	if !verifyToken(c, m) {
+	if !VerifyTimeToken(c, m) {
 		return
 	}
 	token, err := service.GenAccessToken(m.Sign)
 	result.R(c, err, token)
 }
 
+// VerifyAccessToken 验证Token
+func VerifyAccessToken(c *gin.Context) {
+	accessToken, exists := c.GetQuery("accessToken")
+	if !exists || len(accessToken) == 0 {
+		result.ParamErr(c, "缺少accessToken参数")
+		return
+	}
+	tokenM, err := service.AnalysisAccessToken(accessToken)
+	if err != nil {
+		result.ParamErr(c, "access token错误:"+err.Error())
+		return
+	}
+	diff := time.Now().Unix() - tokenM.CreateTime
+	conf := serverconf.GetSysConf()
+	validHour := int64(conf.Server.AccessTokenValidHour)
+	if diff > validHour*3600 {
+		msg := fmt.Sprintf("access token已过期,有效期:%d", validHour)
+		result.ParamErr(c, msg)
+		return
+	}
+	result.R(c, nil, "1")
+}
+
 // 验证服务sign
 func verifySign(c *gin.Context) (bool, *model.ServerModel) {
-	serverSign, exists := c.GetQuery("sign")
+	serverSign, exists := c.GetQuery("serverSign")
 	if !exists {
-		result.ParamErr(c, "缺失sign参数")
+		result.ParamErr(c, "缺失serverSign参数")
 		return false, nil
 	}
 	s, err := service.ServerSvcIns.GetBySign(c, serverSign)
@@ -49,28 +74,31 @@ func verifySign(c *gin.Context) (bool, *model.ServerModel) {
 	return true, s
 }
 
-// 验证token
-func verifyToken(c *gin.Context, m *model.ServerModel) bool {
-	token, exists := c.GetQuery("token")
+// VerifyTimeToken 验证客户端时间token
+func VerifyTimeToken(c *gin.Context, m *model.ServerModel) bool {
+	token, exists := c.GetQuery("timeToken")
 	if !exists {
-		result.ParamErr(c, "缺失token参数")
+		result.ParamErr(c, "缺失timeToken参数")
 		return false
 	}
 	key := []byte(m.Secret)
 	iv := []byte(m.IV)
 	t, err := crypt.Decrypt(key, iv, token)
 	if err != nil {
-		result.ParamErr(c, "token不正确:"+err.Error())
+		result.ParamErr(c, "timeToken不正确:"+err.Error())
 		return false
 	}
 	clientTime, err := strconv.Atoi(string(t))
 	if err != nil {
-		result.ParamErr(c, "token不正确:"+err.Error())
+		result.ParamErr(c, "timeToken不正确:"+err.Error())
 		return false
 	}
-	// 时间误差在60秒之内
-	if math.Abs(float64(int64(clientTime)-time.Now().Unix())) > 60 {
-		result.ParamErr(c, "token不正确:"+err.Error())
+	// 检测时间误差
+	conf := serverconf.GetSysConf()
+	validMinute := float64(conf.Server.TimeTokenValidMinute)
+	if math.Abs(float64(int64(clientTime)-time.Now().Unix())) > (validMinute * 60) {
+		msg := fmt.Sprintf("timeToken不正确,和服务端时间差大于%f分钟,client time:%d,server time:%d", validMinute, clientTime, time.Now().Unix())
+		result.ParamErr(c, msg)
 		return false
 	}
 	return true

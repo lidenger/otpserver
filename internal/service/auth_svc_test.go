@@ -2,7 +2,10 @@ package service
 
 import (
 	"github.com/lidenger/otpserver/cmd"
+	"github.com/lidenger/otpserver/pkg/crypt"
+	"strconv"
 	"testing"
+	"time"
 )
 
 var (
@@ -22,6 +25,16 @@ func initP() {
 	crypto.RootKey256 = key256
 	crypto.IV = iv
 	cmd.P.Crypt = crypto
+}
+
+func TestGenTimeToken(t *testing.T) {
+	key192 = []byte("74137809f09b11eeb9fe2cf05daf3fe5")
+	iv = []byte("74154b1ef09b11ee")
+	token, err := crypt.Encrypt(key192, iv, []byte(strconv.FormatInt(time.Now().Unix(), 10)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("token:%+v\n", token)
 }
 
 func TestGenAccessToken(t *testing.T) {

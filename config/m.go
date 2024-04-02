@@ -2,10 +2,12 @@ package config
 
 type M struct {
 	Server struct {
-		Env      string `toml:"env"`
-		Port     int    `toml:"port"`
-		RootPath string `toml:"rootPath"`
-		ReqLimit int    `toml:"reqLimit"`
+		Env                  string `toml:"env"`
+		Port                 int    `toml:"port"`
+		RootPath             string `toml:"rootPath"`
+		ReqLimit             int    `toml:"reqLimit"`
+		AccessTokenValidHour int    `toml:"accessTokenValidHour"`
+		TimeTokenValidMinute int    `toml:"timeTokenValidMinute"`
 	} `toml:"server"`
 	Log struct {
 		Level      string `toml:"level"`
