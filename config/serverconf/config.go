@@ -22,15 +22,15 @@ var appConfig string
 var sysConf *config.M
 
 func InitConfig() *config.M {
-	config := &config.M{}
-	_, err := toml.Decode(appConfig, &config)
+	conf := &config.M{}
+	_, err := toml.Decode(appConfig, &conf)
 	if err != nil {
 		panic(fmt.Sprintf("加载配置文件[app.toml]失败:%+v", err))
 	}
-	reValue := reflect.ValueOf(config).Elem()
-	reType := reflect.TypeOf(config).Elem()
+	reValue := reflect.ValueOf(conf).Elem()
+	reType := reflect.TypeOf(conf).Elem()
 	recursionDecrypt(reType, reValue, "")
-	return config
+	return conf
 }
 
 // 递归解密密文
@@ -66,6 +66,10 @@ func GetSysConf() *config.M {
 		sysConf = LoadConfigByConfSource()
 	}
 	return sysConf
+}
+
+func InitSysConf() {
+	GetSysConf()
 }
 
 // LoadConfigByConfSource 根据选择的方式加载配置文件

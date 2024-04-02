@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/lidenger/otpserver/cmd"
-	"github.com/lidenger/otpserver/config"
 	"github.com/lidenger/otpserver/config/log"
+	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/config/store/mysqlconf"
 	"github.com/lidenger/otpserver/config/store/pgsqlconf"
 	"github.com/lidenger/otpserver/internal/model"
@@ -47,7 +47,8 @@ func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
 	return db
 }
 
-func InitStore(conf *config.M) {
+func InitStore() {
+	conf := serverconf.GetSysConf()
 	c := cmd.P
 	if c.MainStore == "" {
 		panic("主存储类型不能为空")

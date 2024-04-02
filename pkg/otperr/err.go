@@ -64,7 +64,10 @@ func ErrDataNotExists(format string, arg ...any) IErr {
 
 // ErrUnauthorized 权限不足
 func ErrUnauthorized(format string, arg ...any) IErr {
-	msg := fmt.Sprintf(format, arg)
+	msg := format
+	if len(arg) != 0 {
+		msg = fmt.Sprintf(format, arg)
+	}
 	return &Err{
 		error:    errors.New(msg),
 		httpCode: http.StatusUnauthorized,
