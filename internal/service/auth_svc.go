@@ -13,29 +13,45 @@ import (
 	"time"
 )
 
-var accessTokenCache1 = cache.New(3*time.Minute, 5*time.Minute)
-
 var accessTokenCache *cache.Cache
 
-func addTokenCache() {
+// AddAccessTokenCache 增加access token到缓存
+func AddAccessTokenCache(accessToken string, m *model.AccessToken) {
 	if accessTokenCache == nil {
 		conf := serverconf.GetSysConf()
+		minute := time.Duration(conf.Server.TimeTokenValidMinute)
+		accessTokenCache = cache.New(minute*time.Minute, minute*time.Minute)
+	}
+	accessTokenCache.SetDefault(accessToken, m)
+}
 
-		accessTokenCache = cache.New(time.Duration(3*time.Minute), 5*time.Minute)
+// GetAccessTokenInCache 在缓存中获取access token
+func GetAccessTokenInCache(accessToken string) *model.AccessToken {
+	if accessTokenCache == nil {
+		return nil
+	}
+	m, exists := accessTokenCache.Get(accessToken)
+	if !exists {
+		return nil
+	}
+	if x, ok := m.(*model.AccessToken); ok {
+		return x
+	} else {
+		return nil
 	}
 }
 
 // GenAccessToken 生成access token
 // serverSign 接入服务的标识
 // key,iv 系统根密钥，防伪造
-func GenAccessToken(serverSign string) (accessToken string, err error) {
-	accessTokenModel := &model.AccessToken{}
-	accessTokenModel.Sign = serverSign
-	accessTokenModel.CreateTime = time.Now().Unix()
-	accessTokenModel.Rn = util.Generate32Str()
-	tokenJson, err := json.Marshal(accessTokenModel)
+func GenAccessToken(serverSign string) (accessToken string, m *model.AccessToken, err error) {
+	m = &model.AccessToken{}
+	m.Sign = serverSign
+	m.CreateTime = time.Now().Unix()
+	m.Rn = util.Generate32Str()
+	tokenJson, err := json.Marshal(m)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	accessToken, err = crypt.Encrypt(cmd.P.RootKey128, cmd.P.IV, tokenJson)
 	return
