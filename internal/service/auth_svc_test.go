@@ -39,11 +39,12 @@ func TestGenTimeToken(t *testing.T) {
 
 func TestGenAccessToken(t *testing.T) {
 	initP()
-	token, err := GenAccessToken("server1")
+	token, m, err := GenAccessToken("server1")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("%+v", token)
+	t.Logf("%+v\n", m)
+	t.Logf("%+v\n", token)
 }
 
 func TestAnalysisAccessToken(t *testing.T) {

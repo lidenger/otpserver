@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/internal/model"
+	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/service"
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/result"
@@ -13,18 +14,25 @@ import (
 	"time"
 )
 
-// GetAccessToken 获取AccessToken
+// GenAccessToken 生成AccessToken
 // serverSign 服务标识，添加服务时指定的标识
 // timeToken AES(KEY+IV, UNIX时间戳)
-func GetAccessToken(c *gin.Context) {
-	success, m := verifySign(c)
+func GenAccessToken(c *gin.Context) {
+	var p *param.GenAccessTokenParam
+	p = validParam(c, p)
+	if p == nil {
+		return
+	}
+	success, m := verifySign(c, p.ServerSign)
 	if !success {
 		return
 	}
-	if !VerifyTimeToken(c, m) {
+	if !VerifyTimeToken(c, p.TimeToken, m) {
 		return
 	}
-	token, err := service.GenAccessToken(m.Sign)
+	token, atm, err := service.GenAccessToken(m.Sign)
+	// 记录到缓存中
+	service.AddAccessTokenCache(token, atm)
 	result.R(c, err, token)
 }
 
@@ -33,6 +41,12 @@ func VerifyAccessToken(c *gin.Context) {
 	accessToken, exists := c.GetQuery("accessToken")
 	if !exists || len(accessToken) == 0 {
 		result.ParamErr(c, "缺少accessToken参数")
+		return
+	}
+	// 缓存中存在，验证通过
+	tokenM := service.GetAccessTokenInCache(accessToken)
+	if tokenM != nil {
+		result.R(c, nil, "1")
 		return
 	}
 	tokenM, err := service.AnalysisAccessToken(accessToken)
@@ -45,16 +59,13 @@ func VerifyAccessToken(c *gin.Context) {
 		result.ParamErr(c, err.Error())
 		return
 	}
+	// 验证生效记录到缓存中
+	service.AddAccessTokenCache(accessToken, tokenM)
 	result.R(c, nil, "1")
 }
 
 // 验证服务sign
-func verifySign(c *gin.Context) (bool, *model.ServerModel) {
-	serverSign, exists := c.GetQuery("serverSign")
-	if !exists {
-		result.ParamErr(c, "缺失serverSign参数")
-		return false, nil
-	}
+func verifySign(c *gin.Context, serverSign string) (bool, *model.ServerModel) {
 	s, err := service.ServerSvcIns.GetBySign(c, serverSign)
 	if err != nil {
 		result.R(c, err, "")
@@ -72,15 +83,10 @@ func verifySign(c *gin.Context) (bool, *model.ServerModel) {
 }
 
 // VerifyTimeToken 验证客户端时间token
-func VerifyTimeToken(c *gin.Context, m *model.ServerModel) bool {
-	token, exists := c.GetQuery("timeToken")
-	if !exists {
-		result.ParamErr(c, "缺失timeToken参数")
-		return false
-	}
+func VerifyTimeToken(c *gin.Context, timeToken string, m *model.ServerModel) bool {
 	key := []byte(m.Secret)
 	iv := []byte(m.IV)
-	t, err := crypt.Decrypt(key, iv, token)
+	t, err := crypt.Decrypt(key, iv, timeToken)
 	if err != nil {
 		result.ParamErr(c, "timeToken不正确:"+err.Error())
 		return false

@@ -16,6 +16,12 @@ func ServerAuth(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	// 缓存中存在，验证通过
+	tokenM := service.GetAccessTokenInCache(accessToken)
+	if tokenM != nil {
+		c.Next()
+		return
+	}
 	// 解析access token
 	m, err := service.AnalysisAccessToken(accessToken)
 	if err != nil {
@@ -30,6 +36,8 @@ func ServerAuth(c *gin.Context) {
 		c.Abort()
 		return
 	}
+	// 验证生效记录到缓存中
+	service.AddAccessTokenCache(accessToken, m)
 	c.Next()
 }
 

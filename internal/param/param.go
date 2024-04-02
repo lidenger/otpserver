@@ -30,3 +30,8 @@ type ServerPagingParam struct {
 	ServerParam
 	PagingParam
 }
+
+type GenAccessTokenParam struct {
+	ServerSign string `json:"serverSign" valid:"required"`
+	TimeToken  string `json:"timeToken" valid:"required"`
+}
