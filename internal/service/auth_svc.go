@@ -15,8 +15,8 @@ import (
 
 var accessTokenCache *cache.Cache
 
-// AddAccessTokenCache 增加access token到缓存
-func AddAccessTokenCache(accessToken string, m *model.AccessToken) {
+// AddAccessTokenToCache 增加access token到缓存
+func AddAccessTokenToCache(accessToken string, m *model.AccessToken) {
 	if accessTokenCache == nil {
 		conf := serverconf.GetSysConf()
 		minute := time.Duration(conf.Server.TimeTokenValidMinute)

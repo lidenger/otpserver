@@ -32,7 +32,7 @@ func GenAccessToken(c *gin.Context) {
 	}
 	token, atm, err := service.GenAccessToken(m.Sign)
 	// 记录到缓存中
-	service.AddAccessTokenCache(token, atm)
+	service.AddAccessTokenToCache(token, atm)
 	result.R(c, err, token)
 }
 
@@ -60,7 +60,7 @@ func VerifyAccessToken(c *gin.Context) {
 		return
 	}
 	// 验证生效记录到缓存中
-	service.AddAccessTokenCache(accessToken, tokenM)
+	service.AddAccessTokenToCache(accessToken, tokenM)
 	result.R(c, nil, "1")
 }
 
