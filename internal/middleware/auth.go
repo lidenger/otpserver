@@ -37,7 +37,7 @@ func ServerAuth(c *gin.Context) {
 		return
 	}
 	// 验证生效记录到缓存中
-	service.AddAccessTokenCache(accessToken, m)
+	service.AddAccessTokenToCache(accessToken, m)
 	c.Next()
 }
 
