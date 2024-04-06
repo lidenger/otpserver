@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+type IStore interface {
+	IsEnable(ctx context.Context) bool
+}
+
 // SecretStore 账号密钥
 type SecretStore interface {
 	Insert(ctx context.Context, m *model.AccountSecretModel) (Tx, error)

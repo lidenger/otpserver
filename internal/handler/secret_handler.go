@@ -24,3 +24,7 @@ func GetAccountSecret(ctx *gin.Context) {
 	model, err := service.SecretSvcIns.GetByAccount(ctx, account)
 	result.R(ctx, err, model)
 }
+
+func PagingAccountSecret(ctx *gin.Context) {
+
+}
