@@ -1,23 +1,9 @@
 package service
 
 import (
-	"encoding/base32"
 	"github.com/lidenger/otpserver/internal/store"
-	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/otperr"
-	"github.com/lidenger/otpserver/pkg/util"
 )
-
-// 生成密钥
-func genSecret(rootKey, iv []byte) (string, error) {
-	secret := util.GenerateStr()
-	secretEncode := base32.StdEncoding.EncodeToString([]byte(secret))
-	secretCipher, err := crypt.Encrypt(rootKey, iv, []byte(secretEncode))
-	if err != nil {
-		return "", otperr.ErrEncrypt(err)
-	}
-	return secretCipher, nil
-}
 
 type doubleWriteFunc func() (store.Tx, error)
 

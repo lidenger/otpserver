@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/base32"
 	"errors"
 	"fmt"
 	"github.com/lidenger/otpserver/cmd"
@@ -17,6 +18,8 @@ import (
 type SecretSvc struct {
 	Store       store.SecretStore // 主存储
 	StoreBackup store.SecretStore // 备存储
+	StoreMemory store.SecretStore // 内存存储
+	StoreLocal  store.SecretStore // 本地存储
 }
 
 // Add 添加账号密钥
@@ -61,6 +64,17 @@ func (s *SecretSvc) NewSecretModel(account string) (*model.AccountSecretModel, e
 	// 计算数据摘要
 	m.DataCheck = s.CalcDataCheckSum(m.IsEnable, m.Account, m.SecretSeed)
 	return m, nil
+}
+
+// 生成密钥
+func genSecret(rootKey, iv []byte) (string, error) {
+	secret := util.GenerateStr()
+	secretEncode := base32.StdEncoding.EncodeToString([]byte(secret))
+	secretCipher, err := crypt.Encrypt(rootKey, iv, []byte(secretEncode))
+	if err != nil {
+		return "", otperr.ErrEncrypt(err)
+	}
+	return secretCipher, nil
 }
 
 // IsExists 账号密钥是否存在
@@ -128,4 +142,8 @@ func findByStore(ctx context.Context, account string, s store.SecretStore) (*mod
 func (s *SecretSvc) CalcDataCheckSum(isEnable uint8, account, secretSeedCipher string) string {
 	data := fmt.Sprintf("%d,%s,%s", isEnable, account, secretSeedCipher)
 	return crypt.HmacDigest(cmd.P.RootKey192, data)
+}
+
+func (s *SecretSvc) Paging(p *param.PagingParam) {
+
 }

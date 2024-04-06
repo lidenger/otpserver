@@ -37,6 +37,11 @@ func api(g *gin.Engine) {
 		adminv1 := v1.Group("/admin") // 管理平台
 		adminv1.Use(middleware.AdminAuth)
 		{
+			adminv1Secret := adminv1.Group("/secret")
+			{
+				adminv1Secret.POST("", handler.AddAccountSecret)
+			}
+
 			serverv1 := adminv1.Group("/server") // 接入服务
 			{
 				serverv1.POST("", handler.AddServer)     // 新增服务
