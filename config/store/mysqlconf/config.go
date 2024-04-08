@@ -3,6 +3,7 @@ package mysqlconf
 import (
 	"fmt"
 	"github.com/lidenger/otpserver/config"
+	"github.com/lidenger/otpserver/config/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -41,4 +42,19 @@ func InitMySQL(conf *config.M) *gorm.DB {
 	_db.SetMaxOpenConns(conf.MySQL.MaxOpenConn)
 	DB = db
 	return db
+}
+
+func CloseMySQL() {
+	if DB == nil {
+		return
+	}
+	_db, _ := DB.DB()
+	_ = _db.Close()
+	log.Info("MySQL已关闭")
+}
+
+func TestMySQL(db *gorm.DB) error {
+	var x uint8
+	db = db.Raw("select 1").Scan(&x)
+	return db.Error
 }

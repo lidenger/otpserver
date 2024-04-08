@@ -12,6 +12,16 @@ type ServerStore struct {
 	DB *gorm.DB
 }
 
+func (s *ServerStore) GetStoreErr() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *ServerStore) SetStoreErr(err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // 确保ServerStore实现了store.ServerStore
 var _ store.ServerStore = (*ServerStore)(nil)
 

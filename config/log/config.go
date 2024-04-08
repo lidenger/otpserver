@@ -37,15 +37,27 @@ func InitLog() {
 }
 
 func Info(template string, args ...any) {
-	zapLogger.Sugar().Infof(template, args)
+	if len(args) == 0 {
+		zapLogger.Sugar().Infoln(template)
+	} else {
+		zapLogger.Sugar().Infof(template, args)
+	}
 }
 
 func Warn(template string, args ...any) {
-	zapLogger.Sugar().Infof(template, args)
+	if len(args) == 0 {
+		zapLogger.Sugar().Warnln(template)
+	} else {
+		zapLogger.Sugar().Warnf(template, args)
+	}
 }
 
 func Error(template string, args ...any) {
-	zapLogger.Sugar().Infof(template, args)
+	if len(args) == 0 {
+		zapLogger.Sugar().Errorln(template)
+	} else {
+		zapLogger.Sugar().Errorf(template, args)
+	}
 }
 
 // rotatedConf 日志翻滚切割配置

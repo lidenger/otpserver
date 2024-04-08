@@ -1,13 +1,14 @@
 package service
 
 import (
+	"context"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/otperr"
 )
 
 type doubleWriteFunc func() (store.Tx, error)
 
-// DoubleWrite 主备双写
+// DoubleWrite 主备写
 func DoubleWrite(exec, execBackup doubleWriteFunc) error {
 	// 主存储
 	tx, err := exec()
@@ -32,4 +33,23 @@ func DoubleWrite(exec, execBackup doubleWriteFunc) error {
 	tx.Commit()
 	tx2.Commit()
 	return nil
+}
+
+// MultiStoreInsert 多store insert
+func MultiStoreInsert[T any](ctx context.Context, m T, main, backup store.InsertFunc[T]) error {
+	var backupExec doubleWriteFunc = nil
+	if backup != nil {
+		backupExec = func() (store.Tx, error) {
+			return backup.Insert(ctx, m)
+		}
+	}
+	err := DoubleWrite(func() (store.Tx, error) {
+		return main.Insert(ctx, m)
+	}, backupExec)
+	return err
+}
+
+// MultiStoreRead 多store读取
+func MultiStoreRead() {
+
 }

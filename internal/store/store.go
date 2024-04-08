@@ -14,26 +14,50 @@ import (
 	"strings"
 )
 
-type IStore interface {
-	IsEnable(ctx context.Context) bool
+// HealthFunc store健康状态
+type HealthFunc interface {
+	GetStoreErr() error
+	SetStoreErr(error)
+}
+
+type InsertFunc[T any] interface {
+	Insert(ctx context.Context, m T) (Tx, error)
+}
+
+type UpdateFunc interface {
+	Update(ctx context.Context, ID int64, params map[string]any) (Tx, error)
+}
+
+type DeleteFunc interface {
+	Delete(ctx context.Context, ID int64) (Tx, error)
+}
+
+type PagingFunc[P any, R any] interface {
+	Paging(ctx context.Context, param P) (result []R, count int64, err error)
+}
+
+type SelectByConditionFunc[P any, R any] interface {
+	SelectByCondition(ctx context.Context, condition P) (result []R, err error)
 }
 
 // SecretStore 账号密钥
 type SecretStore interface {
-	Insert(ctx context.Context, m *model.AccountSecretModel) (Tx, error)
-	Update(ctx context.Context, ID int64, params map[string]any) (Tx, error)
-	Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error)
-	SelectByCondition(ctx context.Context, condition *param.SecretParam) (result []*model.AccountSecretModel, err error)
-	Delete(ctx context.Context, ID int64) (Tx, error)
+	HealthFunc
+	InsertFunc[*model.AccountSecretModel]
+	UpdateFunc
+	DeleteFunc
+	PagingFunc[*param.SecretPagingParam, *model.AccountSecretModel]
+	SelectByConditionFunc[*param.SecretParam, *model.AccountSecretModel]
 }
 
 // ServerStore 接入的服务
 type ServerStore interface {
-	Insert(ctx context.Context, m *model.ServerModel) (Tx, error)
-	Update(ctx context.Context, ID int64, params map[string]any) (Tx, error)
-	Paging(ctx context.Context, param *param.ServerPagingParam) (result []*model.ServerModel, count int64, err error)
-	SelectByCondition(ctx context.Context, condition *param.ServerParam) (result []*model.ServerModel, err error)
-	Delete(ctx context.Context, ID int64) (Tx, error)
+	HealthFunc
+	InsertFunc[*model.ServerModel]
+	UpdateFunc
+	DeleteFunc
+	PagingFunc[*param.ServerPagingParam, *model.ServerModel]
+	SelectByConditionFunc[*param.ServerParam, *model.ServerModel]
 }
 
 // Tx 事务，这里定义事务接口，不依赖于具体的框架实现，降低耦合
@@ -51,6 +75,8 @@ func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
 	return db
 }
 
+var CacheMap = make(map[string]*gorm.DB)
+
 func InitStore() {
 	conf := serverconf.GetSysConf()
 	c := cmd.P
@@ -63,10 +89,16 @@ func InitStore() {
 		log.Warn("注意：主备存储设置一致，当前模式为弃用备存储!")
 		c.BackupStore = ""
 	}
-	if c.MainStore == "mysql" || c.BackupStore == "mysql" {
-		mysqlconf.InitMySQL(conf)
-	} else if c.MainStore == "pgsql" || c.BackupStore == "pgsql" {
-		pgsqlconf.InitPgsql(conf)
+	if eq(c.MainStore, c.BackupStore, "mysql") {
+		db := mysqlconf.InitMySQL(conf)
+		CacheMap["mysql"] = db
+		err := mysqlconf.TestMySQL(db)
+		if err != nil {
+			log.Error("mysql检测不通过，err:%s", err.Error())
+		}
+	} else if eq(c.MainStore, c.BackupStore, "pgsql") {
+		db := pgsqlconf.InitPgsql(conf)
+		CacheMap["[pgsql]"] = db
 	} else {
 		panic("不支持的存储类型:" + c.MainStore)
 	}
@@ -79,4 +111,8 @@ func InitStore() {
 		builder.WriteString(fmt.Sprintf("备存储:%s,", c.BackupStore))
 	}
 	log.Info("%s", builder.String())
+}
+
+func eq(str1, str2, t string) bool {
+	return str1 == t || str2 == t
 }

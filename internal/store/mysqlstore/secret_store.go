@@ -10,11 +10,20 @@ import (
 )
 
 type SecretStore struct {
-	DB *gorm.DB
+	DB       *gorm.DB
+	storeErr error
 }
 
 // 确保SecretStore实现了store.SecretStore
 var _ store.SecretStore = (*SecretStore)(nil)
+
+func (s *SecretStore) GetStoreErr() error {
+	return s.storeErr
+}
+
+func (s *SecretStore) SetStoreErr(err error) {
+	s.storeErr = err
+}
 
 func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (store.Tx, error) {
 	tx := s.DB.Begin()
