@@ -7,6 +7,7 @@ import (
 	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config"
 	"github.com/lidenger/otpserver/pkg/crypt"
+	"github.com/lidenger/otpserver/pkg/enum"
 	"github.com/nacos-group/nacos-sdk-go/v2/clients"
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
@@ -77,19 +78,19 @@ func LoadConfigByConfSource() *config.M {
 	var conf *config.M
 	confFile := cmd.P.ConfFile
 	switch cmd.P.ConfSource {
-	case "nacos":
+	case enum.ConfSourceNacos:
 		if len(confFile) == 0 {
 			confFile = "nacos.toml"
 		}
 		conf = LoadConfByNacos(confFile)
 		fmt.Println("从nacos加载配置完成")
-	case "local":
+	case enum.ConfSourceLocal:
 		if len(confFile) == 0 {
 			confFile = "app.toml"
 		}
 		conf = LoadConfByLocalFile(confFile)
 		fmt.Println("从本地文件加载配置完成")
-	case "default": // 需要明确指定从默认配置加载而不是自动使用default分支
+	case enum.ConfSourceDefault: // 需要明确指定从默认配置加载而不是自动使用default分支
 		conf = InitConfig()
 		fmt.Println("从系统默认配置文件加载配置完成")
 	default:

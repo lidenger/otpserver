@@ -16,6 +16,7 @@ const (
 
 	StoreErr       CODE = 500010 // 存储异常
 	StoreBackupErr CODE = 500011 // 备存储异常
+	StoreUnready   CODE = 500012 // 存储未就绪
 
 	CryptoErr   CODE = 500020 // 密码操作相关异常
 	EncryptErr  CODE = 500021 // 加密异常

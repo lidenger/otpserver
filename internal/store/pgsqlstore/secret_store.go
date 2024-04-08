@@ -15,6 +15,16 @@ type SecretStore struct {
 // 确保SecretStore实现了store.SecretStore
 var _ store.SecretStore = (*SecretStore)(nil)
 
+func (s *SecretStore) GetStoreErr() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *SecretStore) SetStoreErr(err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (store.Tx, error) {
 
 	return nil, nil

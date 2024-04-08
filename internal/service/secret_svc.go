@@ -38,15 +38,7 @@ func (s *SecretSvc) Add(ctx context.Context, account string) error {
 		return err
 	}
 	// 主备写
-	var backupExec doubleWriteFunc = nil
-	if s.StoreBackup != nil {
-		backupExec = func() (store.Tx, error) {
-			return s.StoreBackup.Insert(ctx, m)
-		}
-	}
-	err = DoubleWrite(func() (store.Tx, error) {
-		return s.Store.Insert(ctx, m)
-	}, backupExec)
+	err = MultiStoreInsert[*model.AccountSecretModel](ctx, m, s.Store, s.StoreBackup)
 	return err
 }
 

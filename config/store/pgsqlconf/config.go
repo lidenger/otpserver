@@ -7,6 +7,7 @@ import (
 
 var DB *gorm.DB
 
-func InitPgsql(conf *config.M) {
+func InitPgsql(conf *config.M) *gorm.DB {
 
+	return nil
 }
