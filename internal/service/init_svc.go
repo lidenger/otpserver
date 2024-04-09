@@ -17,7 +17,7 @@ var ServerSvcIns = &ServerSvc{}
 // store type | healthFunc
 var svcStoreStatusMap = make(map[string][]store.HealthFunc)
 
-func InitSvc() {
+func Initialize() {
 	switch cmd.P.MainStore {
 	case enum.MySQLStore:
 		SecretSvcIns.Store = &mysqlstore.SecretStore{DB: mysqlconf.DB}
@@ -36,6 +36,8 @@ func InitSvc() {
 		SecretSvcIns.StoreBackup = &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
 		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup)
 	}
+	//SecretSvcIns.StoreLocal =
+
 	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc")
 }
 

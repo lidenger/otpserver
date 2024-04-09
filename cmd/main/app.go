@@ -6,7 +6,10 @@ import (
 	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
+	"github.com/lidenger/otpserver/config/store/localconf"
+	"github.com/lidenger/otpserver/config/store/memoryconf"
 	"github.com/lidenger/otpserver/config/store/mysqlconf"
+	"github.com/lidenger/otpserver/config/store/pgsqlconf"
 	"github.com/lidenger/otpserver/internal/router"
 	"github.com/lidenger/otpserver/internal/service"
 	"github.com/lidenger/otpserver/internal/store"
@@ -36,11 +39,11 @@ func main() {
 		return
 	}
 	// 正常启动Http服务
-	serverconf.InitSysConf()
-	log.InitLog()
-	store.InitStore()
-	service.InitSvc()
-	g := router.InitRouter()
+	serverconf.Initialize()
+	log.Initialize()
+	store.Initialize()
+	service.Initialize()
+	g := router.Initialize()
 	httpPort := serverconf.GetSysConf().Server.Port
 	server := &http.Server{
 		Addr:    fmt.Sprintf("0.0.0.0:%d", httpPort),
@@ -75,6 +78,12 @@ func main() {
 func closeRes() {
 	// 关闭store定期检测
 	timer.StoreHealthCheckTickerStop()
-	// 关闭mysql
-	mysqlconf.CloseMySQL()
+	// 关闭MySQL
+	mysqlconf.Close()
+	// 关闭PostgreSQL
+	pgsqlconf.Close()
+	// 关闭本地存储
+	localconf.Close()
+	// 关闭memory存储
+	memoryconf.Close()
 }
