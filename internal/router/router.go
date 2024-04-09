@@ -7,7 +7,7 @@ import (
 	"github.com/lidenger/otpserver/internal/middleware"
 )
 
-func InitRouter() *gin.Engine {
+func Initialize() *gin.Engine {
 	conf := serverconf.GetSysConf()
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.Default()

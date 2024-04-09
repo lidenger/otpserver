@@ -14,7 +14,7 @@ import (
 var zapLogger *zap.Logger
 var HttpZapLogger *zap.Logger
 
-func InitLog() {
+func Initialize() {
 	conf := serverconf.GetSysConf()
 	level, err := zap.ParseAtomicLevel(conf.Log.Level)
 	if err != nil {

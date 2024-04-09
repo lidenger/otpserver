@@ -12,7 +12,7 @@ import (
 
 var DB *gorm.DB
 
-func InitMySQL(conf *config.M) *gorm.DB {
+func Initialize(conf *config.M) *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local&timeout=%s",
 		conf.MySQL.UserName,
 		conf.MySQL.Password,
@@ -44,7 +44,7 @@ func InitMySQL(conf *config.M) *gorm.DB {
 	return db
 }
 
-func CloseMySQL() {
+func Close() {
 	if DB == nil {
 		return
 	}
@@ -53,7 +53,8 @@ func CloseMySQL() {
 	log.Info("MySQL已关闭")
 }
 
-func TestMySQL(db *gorm.DB) error {
+func Test() error {
+	var db = DB
 	var x uint8
 	db = db.Raw("select 1").Scan(&x)
 	return db.Error

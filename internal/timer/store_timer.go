@@ -10,11 +10,8 @@ var storeHealthCheckTicker = time.NewTicker(5 * time.Second)
 
 func StoreHealthCheckTickerStart() {
 	go func() {
-		for {
-			select {
-			case <-storeHealthCheckTicker.C:
-				fmt.Println("storeHealthCheckTicker..")
-			}
+		for range storeHealthCheckTicker.C {
+			fmt.Println("storeHealthCheckTicker..")
 		}
 	}()
 }

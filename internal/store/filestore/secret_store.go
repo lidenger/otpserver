@@ -8,19 +8,28 @@ import (
 )
 
 type SecretStore struct {
+	err error
 }
 
 // 确保SecretStore实现了store.SecretStore
 var _ store.SecretStore = (*SecretStore)(nil)
 
-func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) error {
-
-	return nil
+func (s *SecretStore) GetStoreErr() error {
+	return s.err
 }
 
-func (s *SecretStore) Update(ctx context.Context, m *model.AccountSecretModel) error {
+func (s *SecretStore) SetStoreErr(err error) {
+	s.err = err
+}
 
-	return nil
+func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (store.Tx, error) {
+
+	return nil, nil
+}
+
+func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) (store.Tx, error) {
+
+	return nil, nil
 }
 
 func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
@@ -33,7 +42,7 @@ func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.Se
 	return nil, nil
 }
 
-func (s *SecretStore) Delete(ctx context.Context, ID int64) error {
+func (s *SecretStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {
 
-	return nil
+	return nil, nil
 }

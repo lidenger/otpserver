@@ -69,7 +69,7 @@ func GetSysConf() *config.M {
 	return sysConf
 }
 
-func InitSysConf() {
+func Initialize() {
 	GetSysConf()
 }
 
@@ -78,19 +78,19 @@ func LoadConfigByConfSource() *config.M {
 	var conf *config.M
 	confFile := cmd.P.ConfFile
 	switch cmd.P.ConfSource {
-	case enum.ConfSourceNacos:
+	case enum.NacosConfSource:
 		if len(confFile) == 0 {
 			confFile = "nacos.toml"
 		}
 		conf = LoadConfByNacos(confFile)
 		fmt.Println("从nacos加载配置完成")
-	case enum.ConfSourceLocal:
+	case enum.LocalConfSource:
 		if len(confFile) == 0 {
 			confFile = "app.toml"
 		}
 		conf = LoadConfByLocalFile(confFile)
 		fmt.Println("从本地文件加载配置完成")
-	case enum.ConfSourceDefault: // 需要明确指定从默认配置加载而不是自动使用default分支
+	case enum.DefaultConfSource: // 需要明确指定从默认配置加载而不是自动使用default分支
 		conf = InitConfig()
 		fmt.Println("从系统默认配置文件加载配置完成")
 	default:

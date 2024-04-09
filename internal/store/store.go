@@ -10,6 +10,7 @@ import (
 	"github.com/lidenger/otpserver/config/store/pgsqlconf"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
+	"github.com/lidenger/otpserver/pkg/enum"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -75,9 +76,7 @@ func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
 	return db
 }
 
-var CacheMap = make(map[string]*gorm.DB)
-
-func InitStore() {
+func Initialize() {
 	conf := serverconf.GetSysConf()
 	c := cmd.P
 	if c.MainStore == "" {
@@ -89,16 +88,18 @@ func InitStore() {
 		log.Warn("注意：主备存储设置一致，当前模式为弃用备存储!")
 		c.BackupStore = ""
 	}
-	if eq(c.MainStore, c.BackupStore, "mysql") {
-		db := mysqlconf.InitMySQL(conf)
-		CacheMap["mysql"] = db
-		err := mysqlconf.TestMySQL(db)
+	if eq(c.MainStore, c.BackupStore, enum.MySQLStore) {
+		mysqlconf.Initialize(conf)
+		err := mysqlconf.Test()
 		if err != nil {
-			log.Error("mysql检测不通过，err:%s", err.Error())
+			log.Error("MySQL检测不通过，err:%s", err.Error())
 		}
-	} else if eq(c.MainStore, c.BackupStore, "pgsql") {
-		db := pgsqlconf.InitPgsql(conf)
-		CacheMap["[pgsql]"] = db
+	} else if eq(c.MainStore, c.BackupStore, enum.PostGreSQLStore) {
+		pgsqlconf.Initialize(conf)
+		err := pgsqlconf.Test()
+		if err != nil {
+			log.Error("PostgreSQL检测不通过，err:%s", err.Error())
+		}
 	} else {
 		panic("不支持的存储类型:" + c.MainStore)
 	}
