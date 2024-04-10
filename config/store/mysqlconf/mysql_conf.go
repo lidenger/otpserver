@@ -12,6 +12,11 @@ import (
 
 var DB *gorm.DB
 
+type MySQLConf struct {
+}
+
+var MySQLConfIns = &MySQLConf{}
+
 func Initialize(conf *config.M) *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local&timeout=%s",
 		conf.MySQL.UserName,
@@ -44,7 +49,7 @@ func Initialize(conf *config.M) *gorm.DB {
 	return db
 }
 
-func Close() {
+func (m *MySQLConf) CloseStore() {
 	if DB == nil {
 		return
 	}
@@ -53,7 +58,7 @@ func Close() {
 	log.Info("MySQL已关闭")
 }
 
-func Test() error {
+func (m *MySQLConf) TestStore() error {
 	var db = DB
 	var x uint8
 	db = db.Raw("select 1").Scan(&x)
