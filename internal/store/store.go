@@ -6,6 +6,8 @@ import (
 	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
+	"github.com/lidenger/otpserver/config/store/localconf"
+	"github.com/lidenger/otpserver/config/store/memoryconf"
 	"github.com/lidenger/otpserver/config/store/mysqlconf"
 	"github.com/lidenger/otpserver/config/store/pgsqlconf"
 	"github.com/lidenger/otpserver/internal/model"
@@ -76,6 +78,8 @@ func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
 	return db
 }
 
+var activeStore = make([]string, 0)
+
 func Initialize() {
 	conf := serverconf.GetSysConf()
 	c := cmd.P
@@ -94,12 +98,14 @@ func Initialize() {
 		if err != nil {
 			log.Error("MySQL检测不通过，err:%s", err.Error())
 		}
+		activeStore = append(activeStore, enum.MySQLStore)
 	} else if eq(c.MainStore, c.BackupStore, enum.PostGreSQLStore) {
 		pgsqlconf.Initialize(conf)
 		err := pgsqlconf.Test()
 		if err != nil {
 			log.Error("PostgreSQL检测不通过，err:%s", err.Error())
 		}
+		activeStore = append(activeStore, enum.PostGreSQLStore)
 	} else {
 		panic("不支持的存储类型:" + c.MainStore)
 	}
@@ -112,6 +118,18 @@ func Initialize() {
 		builder.WriteString(fmt.Sprintf("备存储:%s,", c.BackupStore))
 	}
 	log.Info("%s", builder.String())
+
+	// 启用本地存储
+	localconf.Initialize(conf)
+	activeStore = append(activeStore, enum.LocalStore)
+	// 启用memory存储
+	memoryconf.Initialize(conf)
+	activeStore = append(activeStore, enum.MemoryStore)
+}
+
+// GetAllActiveStore 获取所有启用的store
+func GetAllActiveStore() []string {
+	return activeStore
 }
 
 func eq(str1, str2, t string) bool {
