@@ -22,7 +22,7 @@ func StoreHealthCheckTickerStart() {
 	}()
 }
 
-// 检测单个store健康状态
+// 检测store健康状态
 func testStore(s storeconf.Status) {
 	err := s.TestStore()
 	if err != nil {
@@ -36,5 +36,5 @@ func testStore(s storeconf.Status) {
 
 func StoreHealthCheckTickerStop() {
 	storeHealthCheckTicker.Stop()
-	log.Info("storeHealthCheckTicker已关闭")
+	log.Info("storeHealthCheckTicker已停止")
 }

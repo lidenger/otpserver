@@ -1,19 +1,19 @@
 package param
 
 type PagingParam struct {
-	PageNo    int // 从1开始
-	PageSize  int
-	SearchTxt string
+	PageNo    int    `json:"pageNo"` // 从1开始
+	PageSize  int    `json:"pageSize"`
+	SearchTxt string `json:"searchTxt"`
 }
 
 type SecretParam struct {
 	ID       int64  `json:"id"`
 	Account  string `json:"account" valid:"required"`
-	IsEnable uint8  `json:"isEnable"`
+	IsEnable uint8  `json:"isEnable"` // 1是，2否
 }
 
 type SecretPagingParam struct {
-	SecretParam
+	IsEnable uint8 `json:"isEnable"`
 	PagingParam
 }
 

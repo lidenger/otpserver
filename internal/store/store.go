@@ -14,6 +14,7 @@ import (
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/pkg/enum"
+	"github.com/lidenger/otpserver/pkg/util"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -25,28 +26,32 @@ type HealthFunc interface {
 }
 
 type InsertFunc[T any] interface {
+	HealthFunc
 	Insert(ctx context.Context, m T) (Tx, error)
 }
 
 type UpdateFunc interface {
+	HealthFunc
 	Update(ctx context.Context, ID int64, params map[string]any) (Tx, error)
 }
 
 type DeleteFunc interface {
+	HealthFunc
 	Delete(ctx context.Context, ID int64) (Tx, error)
 }
 
 type PagingFunc[P any, R any] interface {
+	HealthFunc
 	Paging(ctx context.Context, param P) (result []R, count int64, err error)
 }
 
 type SelectByConditionFunc[P any, R any] interface {
+	HealthFunc
 	SelectByCondition(ctx context.Context, condition P) (result []R, err error)
 }
 
 // SecretStore 账号密钥
 type SecretStore interface {
-	HealthFunc
 	InsertFunc[*model.AccountSecretModel]
 	UpdateFunc
 	DeleteFunc
@@ -56,7 +61,6 @@ type SecretStore interface {
 
 // ServerStore 接入的服务
 type ServerStore interface {
-	HealthFunc
 	InsertFunc[*model.ServerModel]
 	UpdateFunc
 	DeleteFunc
@@ -93,14 +97,14 @@ func Initialize() {
 		log.Warn("注意：主备存储设置一致，当前模式为弃用备存储!")
 		c.BackupStore = ""
 	}
-	if eq(c.MainStore, c.BackupStore, enum.MySQLStore) {
+	if util.Eqs(enum.MySQLStore, c.MainStore, c.BackupStore) {
 		mysqlconf.Initialize(conf)
 		err := mysqlconf.MySQLConfIns.TestStore()
 		if err != nil {
 			log.Error("MySQL检测不通过，err:%s", err.Error())
 		}
 		activeStore = append(activeStore, mysqlconf.MySQLConfIns)
-	} else if eq(c.MainStore, c.BackupStore, enum.PostGreSQLStore) {
+	} else if util.Eqs(enum.PostGreSQLStore, c.MainStore, c.BackupStore) {
 		pgsqlconf.Initialize(conf)
 		err := pgsqlconf.PgSQLConfIns.TestStore()
 		if err != nil {
@@ -119,26 +123,19 @@ func Initialize() {
 		builder.WriteString(fmt.Sprintf("备存储:%s,", c.BackupStore))
 	}
 	log.Info("%s", builder.String())
-
 	// 启用本地存储
 	if conf.Server.IsEnableLocalStore {
 		localconf.Initialize(conf)
 		activeStore = append(activeStore, localconf.LocalConfIns)
 	}
-
 	// 启用memory存储
 	if conf.Server.IsEnableMemoryStore {
 		memoryconf.Initialize(conf)
 		activeStore = append(activeStore, memoryconf.MemoryConfIns)
 	}
-
 }
 
 // GetAllActiveStore 获取所有启用的store
 func GetAllActiveStore() []storeconf.Status {
 	return activeStore
-}
-
-func eq(str1, str2, t string) bool {
-	return str1 == t || str2 == t
 }

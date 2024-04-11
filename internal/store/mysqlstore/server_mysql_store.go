@@ -9,17 +9,16 @@ import (
 )
 
 type ServerStore struct {
-	DB *gorm.DB
+	DB  *gorm.DB
+	err error
 }
 
 func (s *ServerStore) GetStoreErr() error {
-	//TODO implement me
-	panic("implement me")
+	return s.err
 }
 
 func (s *ServerStore) SetStoreErr(err error) {
-	//TODO implement me
-	panic("implement me")
+	s.err = err
 }
 
 // 确保ServerStore实现了store.ServerStore

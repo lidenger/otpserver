@@ -37,6 +37,7 @@ func Initialize() {
 		addSvcStore(enum.MySQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup)
 	case enum.PostGreSQLStore:
 		SecretSvcIns.StoreBackup = &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
+		ServerSvcIns.StoreBackup = &mysqlstore.ServerStore{DB: pgsqlconf.DB}
 		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup)
 	}
 
@@ -45,13 +46,13 @@ func Initialize() {
 	if conf.Server.IsEnableLocalStore {
 		SecretSvcIns.StoreLocal = &localstore.SecretStore{}
 		ServerSvcIns.StoreLocal = &localstore.ServerStore{}
-		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreLocal, ServerSvcIns.StoreLocal)
+		addSvcStore(enum.LocalStore, SecretSvcIns.StoreLocal, ServerSvcIns.StoreLocal)
 	}
 
 	if conf.Server.IsEnableMemoryStore {
 		SecretSvcIns.StoreMemory = &memorystore.SecretStore{}
 		ServerSvcIns.StoreMemory = &memorystore.ServerStore{}
-		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory)
+		addSvcStore(enum.MemoryStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory)
 	}
 
 	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc")

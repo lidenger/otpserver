@@ -112,6 +112,15 @@ func ErrStoreBackup(err error) IErr {
 	}
 }
 
+// ErrStoreUnready 备存储异常
+func ErrStoreUnready(err error) IErr {
+	return &Err{
+		error:    err,
+		httpCode: http.StatusInternalServerError,
+		code:     code.StoreUnready,
+	}
+}
+
 // ErrEncrypt 加密异常
 func ErrEncrypt(err error) IErr {
 	return &Err{

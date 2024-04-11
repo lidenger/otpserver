@@ -26,5 +26,18 @@ func GetAccountSecret(ctx *gin.Context) {
 }
 
 func PagingAccountSecret(ctx *gin.Context) {
-
+	pagingParam := validPagingParam(ctx)
+	if pagingParam == nil {
+		return
+	}
+	p := &param.SecretPagingParam{}
+	p.PageNo = pagingParam.PageNo
+	p.PageSize = pagingParam.PageSize
+	p.SearchTxt = pagingParam.SearchTxt
+	isEnable := getIntParamByQuery(ctx, "isEnable")
+	if isEnable == -1 {
+		return
+	}
+	data, total, err := service.SecretSvcIns.Paging(ctx, p)
+	result.R(ctx, err, result.MakePagingResult(data, total))
 }

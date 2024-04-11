@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lidenger/otpserver/cmd"
-	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
@@ -81,24 +80,16 @@ func (s *SecretSvc) IsExists(ctx context.Context, account string) (bool, error) 
 // GetByAccount 通过账号获取密钥信息,密钥已解密
 func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.AccountSecretModel, error) {
 	var err error
-	var secretModel *model.AccountSecretModel
-	secretModel, err = findByStore(ctx, account, s.Store)
+	p := &param.SecretParam{Account: account}
+	data, err := MultiStoreSelectByCondition[*param.SecretParam, *model.AccountSecretModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup, s.StoreLocal)
 	if err != nil {
-		if s.StoreBackup == nil {
-			return nil, otperr.ErrStore(err)
-		}
-		log.Warn("主存储获取账号密钥信息异常,尝试从备存储获取,主存储异常信息:%+v", err)
-		var errBackup error
-		secretModel, errBackup = findByStore(ctx, account, s.StoreBackup)
-		if errBackup != nil {
-			log.Error("主备存储都获取失败,主存储err:%+v,备存储err:%+v", err, errBackup)
-			return nil, otperr.ErrStoreBackup(errBackup)
-		}
+		return nil, err
 	}
+	secretModel := util.GetArrFirstItem(data)
 	if secretModel == nil {
 		return nil, nil
 	}
-	err = s.CheckModel(ctx, secretModel)
+	err = s.CheckModel(secretModel)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +97,7 @@ func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.Ac
 }
 
 // CheckModel 校验数据,解密账号密钥密文
-func (s *SecretSvc) CheckModel(ctx context.Context, m *model.AccountSecretModel) error {
+func (s *SecretSvc) CheckModel(m *model.AccountSecretModel) error {
 	check := s.CalcDataCheckSum(m.IsEnable, m.Account, m.SecretSeed)
 	if m.DataCheck != check {
 		msg := fmt.Sprintf("账号密钥数据校验不通过,疑似被篡改,请关注(ID:%d,账号:%s)", m.ID, m.Account)
@@ -120,22 +111,13 @@ func (s *SecretSvc) CheckModel(ctx context.Context, m *model.AccountSecretModel)
 	return nil
 }
 
-func findByStore(ctx context.Context, account string, s store.SecretStore) (*model.AccountSecretModel, error) {
-	condition := &param.SecretParam{}
-	condition.Account = account
-	data, err := s.SelectByCondition(ctx, condition)
-	if err != nil {
-		return nil, err
-	}
-	return util.GetArrFirstItem(data), nil
-}
-
 // CalcDataCheckSum 计算数据校验和
 func (s *SecretSvc) CalcDataCheckSum(isEnable uint8, account, secretSeedCipher string) string {
 	data := fmt.Sprintf("%d,%s,%s", isEnable, account, secretSeedCipher)
 	return crypt.HmacDigest(cmd.P.RootKey192, data)
 }
 
-func (s *SecretSvc) Paging(p *param.PagingParam) {
-
+func (s *SecretSvc) Paging(ctx context.Context, p *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
+	result, count, err = MultiStorePaging[*param.SecretPagingParam, *model.AccountSecretModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup, s.StoreLocal)
+	return
 }
