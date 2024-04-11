@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lidenger/otpserver/config"
 	"github.com/lidenger/otpserver/config/log"
+	"github.com/lidenger/otpserver/pkg/enum"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -47,6 +48,10 @@ func Initialize(conf *config.M) *gorm.DB {
 	_db.SetMaxOpenConns(conf.MySQL.MaxOpenConn)
 	DB = db
 	return db
+}
+
+func (m *MySQLConf) GetStoreType() string {
+	return enum.MySQLStore
 }
 
 func (m *MySQLConf) CloseStore() {

@@ -8,6 +8,8 @@ type M struct {
 		ReqLimit             int    `toml:"reqLimit"`
 		AccessTokenValidHour int    `toml:"accessTokenValidHour"`
 		TimeTokenValidMinute int    `toml:"timeTokenValidMinute"`
+		IsEnableLocalStore   bool   `toml:"isEnableLocalStore"`
+		IsEnableMemoryStore  bool   `toml:"isEnableMemoryStore"`
 	} `toml:"server"`
 	Log struct {
 		Level      string `toml:"level"`

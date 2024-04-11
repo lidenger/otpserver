@@ -6,10 +6,6 @@ import (
 	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
-	"github.com/lidenger/otpserver/config/store/localconf"
-	"github.com/lidenger/otpserver/config/store/memoryconf"
-	"github.com/lidenger/otpserver/config/store/mysqlconf"
-	"github.com/lidenger/otpserver/config/store/pgsqlconf"
 	"github.com/lidenger/otpserver/internal/router"
 	"github.com/lidenger/otpserver/internal/service"
 	"github.com/lidenger/otpserver/internal/store"
@@ -78,12 +74,9 @@ func main() {
 func closeRes() {
 	// 关闭store定期检测
 	timer.StoreHealthCheckTickerStop()
-	// 关闭MySQL
-	mysqlconf.Close()
-	// 关闭PostgreSQL
-	pgsqlconf.Close()
-	// 关闭本地存储
-	localconf.Close()
-	// 关闭memory存储
-	memoryconf.Close()
+	// 关闭所有激活的store
+	storeArr := store.GetAllActiveStore()
+	for _, s := range storeArr {
+		s.CloseStore()
+	}
 }

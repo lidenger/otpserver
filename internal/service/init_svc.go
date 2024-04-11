@@ -3,9 +3,12 @@ package service
 import (
 	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
-	"github.com/lidenger/otpserver/config/store/mysqlconf"
-	"github.com/lidenger/otpserver/config/store/pgsqlconf"
+	"github.com/lidenger/otpserver/config/serverconf"
+	"github.com/lidenger/otpserver/config/storeconf/mysqlconf"
+	"github.com/lidenger/otpserver/config/storeconf/pgsqlconf"
 	"github.com/lidenger/otpserver/internal/store"
+	"github.com/lidenger/otpserver/internal/store/localstore"
+	"github.com/lidenger/otpserver/internal/store/memorystore"
 	"github.com/lidenger/otpserver/internal/store/mysqlstore"
 	"github.com/lidenger/otpserver/internal/store/pgsqlstore"
 	"github.com/lidenger/otpserver/pkg/enum"
@@ -36,7 +39,20 @@ func Initialize() {
 		SecretSvcIns.StoreBackup = &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
 		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup)
 	}
-	//SecretSvcIns.StoreLocal =
+
+	conf := serverconf.GetSysConf()
+
+	if conf.Server.IsEnableLocalStore {
+		SecretSvcIns.StoreLocal = &localstore.SecretStore{}
+		ServerSvcIns.StoreLocal = &localstore.ServerStore{}
+		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreLocal, ServerSvcIns.StoreLocal)
+	}
+
+	if conf.Server.IsEnableMemoryStore {
+		SecretSvcIns.StoreMemory = &memorystore.SecretStore{}
+		ServerSvcIns.StoreMemory = &memorystore.ServerStore{}
+		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory)
+	}
 
 	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc")
 }

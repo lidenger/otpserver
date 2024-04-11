@@ -3,6 +3,7 @@ package pgsqlconf
 import (
 	"github.com/lidenger/otpserver/config"
 	"github.com/lidenger/otpserver/config/log"
+	"github.com/lidenger/otpserver/pkg/enum"
 	"gorm.io/gorm"
 )
 
@@ -16,6 +17,10 @@ var PgSQLConfIns = &PgSQLConf{}
 func Initialize(conf *config.M) *gorm.DB {
 
 	return nil
+}
+
+func (p *PgSQLConf) GetStoreType() string {
+	return enum.PostGreSQLStore
 }
 
 func (p *PgSQLConf) CloseStore() {
