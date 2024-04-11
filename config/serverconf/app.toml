@@ -8,6 +8,10 @@ reqLimit = 100
 accessTokenValidHour = 4
 # time token有效期(分钟)
 timeTokenValidMinute = 2
+# 是否启用本地存储（数据冗余一份到本地磁盘）
+isEnableLocalStore = true
+# 是否启用内存存储（数据冗余一份到内存，优先查询）
+isEnableMemoryStore = true
 
 [log]
 # debug info error

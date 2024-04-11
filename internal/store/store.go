@@ -6,10 +6,11 @@ import (
 	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
-	"github.com/lidenger/otpserver/config/store/localconf"
-	"github.com/lidenger/otpserver/config/store/memoryconf"
-	"github.com/lidenger/otpserver/config/store/mysqlconf"
-	"github.com/lidenger/otpserver/config/store/pgsqlconf"
+	"github.com/lidenger/otpserver/config/storeconf"
+	"github.com/lidenger/otpserver/config/storeconf/localconf"
+	"github.com/lidenger/otpserver/config/storeconf/memoryconf"
+	"github.com/lidenger/otpserver/config/storeconf/mysqlconf"
+	"github.com/lidenger/otpserver/config/storeconf/pgsqlconf"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/pkg/enum"
@@ -78,7 +79,7 @@ func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
 	return db
 }
 
-var activeStore = make([]string, 0)
+var activeStore = make([]storeconf.Status, 0)
 
 func Initialize() {
 	conf := serverconf.GetSysConf()
@@ -94,18 +95,18 @@ func Initialize() {
 	}
 	if eq(c.MainStore, c.BackupStore, enum.MySQLStore) {
 		mysqlconf.Initialize(conf)
-		err := mysqlconf.Test()
+		err := mysqlconf.MySQLConfIns.TestStore()
 		if err != nil {
 			log.Error("MySQL检测不通过，err:%s", err.Error())
 		}
-		activeStore = append(activeStore, enum.MySQLStore)
+		activeStore = append(activeStore, mysqlconf.MySQLConfIns)
 	} else if eq(c.MainStore, c.BackupStore, enum.PostGreSQLStore) {
 		pgsqlconf.Initialize(conf)
-		err := pgsqlconf.Test()
+		err := pgsqlconf.PgSQLConfIns.TestStore()
 		if err != nil {
 			log.Error("PostgreSQL检测不通过，err:%s", err.Error())
 		}
-		activeStore = append(activeStore, enum.PostGreSQLStore)
+		activeStore = append(activeStore, pgsqlconf.PgSQLConfIns)
 	} else {
 		panic("不支持的存储类型:" + c.MainStore)
 	}
@@ -120,15 +121,21 @@ func Initialize() {
 	log.Info("%s", builder.String())
 
 	// 启用本地存储
-	localconf.Initialize(conf)
-	activeStore = append(activeStore, enum.LocalStore)
+	if conf.Server.IsEnableLocalStore {
+		localconf.Initialize(conf)
+		activeStore = append(activeStore, localconf.LocalConfIns)
+	}
+
 	// 启用memory存储
-	memoryconf.Initialize(conf)
-	activeStore = append(activeStore, enum.MemoryStore)
+	if conf.Server.IsEnableMemoryStore {
+		memoryconf.Initialize(conf)
+		activeStore = append(activeStore, memoryconf.MemoryConfIns)
+	}
+
 }
 
 // GetAllActiveStore 获取所有启用的store
-func GetAllActiveStore() []string {
+func GetAllActiveStore() []storeconf.Status {
 	return activeStore
 }
 

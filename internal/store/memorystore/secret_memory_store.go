@@ -1,4 +1,4 @@
-package filestore
+package memorystore
 
 import (
 	"context"
@@ -13,6 +13,7 @@ type SecretStore struct {
 
 // 确保SecretStore实现了store.SecretStore
 var _ store.SecretStore = (*SecretStore)(nil)
+
 
 func (s *SecretStore) GetStoreErr() error {
 	return s.err

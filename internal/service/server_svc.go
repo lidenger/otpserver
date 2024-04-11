@@ -17,6 +17,8 @@ import (
 type ServerSvc struct {
 	Store       store.ServerStore // 主存储
 	StoreBackup store.ServerStore // 备存储
+	StoreMemory store.ServerStore // 内存存储
+	StoreLocal  store.ServerStore // 本地存储
 }
 
 // Add 增加接入的服务
