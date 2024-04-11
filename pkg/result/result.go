@@ -38,3 +38,10 @@ func R(ctx *gin.Context, err error, data any) {
 		result(ctx, http.StatusInternalServerError, code.UnknownErr, x.Error(), "")
 	}
 }
+
+func MakePagingResult[T int | int64](rows any, total T) map[string]any {
+	pagingResult := make(map[string]any, 2)
+	pagingResult["rows"] = rows
+	pagingResult["total"] = total
+	return pagingResult
+}

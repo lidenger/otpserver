@@ -39,6 +39,8 @@ func api(g *gin.Engine) {
 		{
 			adminv1Secret := adminv1.Group("/secret")
 			{
+				adminv1Secret.GET(":account", handler.GetAccountSecret)
+				adminv1Secret.GET("/paging", handler.PagingAccountSecret)
 				adminv1Secret.POST("", handler.AddAccountSecret)
 			}
 

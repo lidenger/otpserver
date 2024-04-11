@@ -33,3 +33,12 @@ func GetArrFirstItem[T any](arr []*T) *T {
 		return nil
 	}
 }
+
+func Eqs(target string, params ...string) bool {
+	for _, param := range params {
+		if param == target {
+			return true
+		}
+	}
+	return false
+}
