@@ -100,3 +100,22 @@ func storeHealthCheck(f store.HealthFunc) error {
 	}
 	return nil
 }
+
+func MultiStoreUpdate(ctx context.Context, ID int64, params map[string]any, main, backup store.UpdateFunc) error {
+	if main.GetStoreErr() != nil {
+		return otperr.ErrStore(main.GetStoreErr())
+	}
+	var backupExec doubleWriteFunc = nil
+	if backup != nil {
+		if backup.GetStoreErr() != nil {
+			return otperr.ErrStore(backup.GetStoreErr())
+		}
+		backupExec = func() (store.Tx, error) {
+			return backup.Update(ctx, ID, params)
+		}
+	}
+	err := DoubleWrite(func() (store.Tx, error) {
+		return main.Update(ctx, ID, params)
+	}, backupExec)
+	return err
+}

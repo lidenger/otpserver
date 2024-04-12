@@ -6,7 +6,6 @@ import (
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"gorm.io/gorm"
-	"strings"
 	"time"
 )
 
@@ -43,8 +42,14 @@ func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]an
 
 func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
 	db := store.ConfigPagingParam(param.PageNo, param.PageSize, s.DB)
-	if strings.TrimSpace(param.SearchTxt) != "" {
-		db = db.Where("account like ?", "%"+param.SearchTxt+"%")
+	if param.SearchTxt != "" {
+		if param.SearchTxt == "启用" {
+			db = db.Where("is_enable = 1")
+		} else if param.SearchTxt == "禁用" {
+			db = db.Where("is_enable = 2")
+		} else {
+			db = db.Where("account like ?", "%"+param.SearchTxt+"%")
+		}
 	}
 	err = db.Order("update_time desc").Find(&result).
 		Offset(-1).

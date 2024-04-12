@@ -14,14 +14,14 @@ func AddAccountSecret(ctx *gin.Context) {
 	if p == nil {
 		return
 	}
-	err := service.SecretSvcIns.Add(ctx, p.Account)
+	err := service.SecretSvcIns.Add(ctx, p.Account, p.IsEnable)
 	result.R(ctx, err, "")
 }
 
 // GetAccountSecret 获取密钥信息
 func GetAccountSecret(ctx *gin.Context) {
 	account := ctx.Param("account")
-	model, err := service.SecretSvcIns.GetByAccount(ctx, account)
+	model, err := service.SecretSvcIns.GetByAccount(ctx, account, true)
 	result.R(ctx, err, model)
 }
 
@@ -40,4 +40,14 @@ func PagingAccountSecret(ctx *gin.Context) {
 	}
 	data, total, err := service.SecretSvcIns.Paging(ctx, p)
 	result.R(ctx, err, result.MakePagingResult(data, total))
+}
+
+func SetEnable(ctx *gin.Context) {
+	var p *param.SecretParam
+	p = validParam(ctx, p)
+	if p == nil {
+		return
+	}
+	err := service.SecretSvcIns.SetEnable(ctx, p.Account, p.IsEnable)
+	result.R(ctx, err, "")
 }

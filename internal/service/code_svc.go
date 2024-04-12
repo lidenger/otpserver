@@ -14,7 +14,7 @@ import (
 var codeCache = cache.New(3*time.Minute, 5*time.Minute)
 
 func ValidCode(ctx context.Context, account, code string) (bool, error) {
-	model, err := SecretSvcIns.GetByAccount(ctx, account)
+	model, err := SecretSvcIns.GetByAccount(ctx, account, true)
 	if err != nil {
 		return false, err
 	}
