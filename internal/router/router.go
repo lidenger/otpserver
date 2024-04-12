@@ -42,6 +42,7 @@ func api(g *gin.Engine) {
 				adminv1Secret.GET(":account", handler.GetAccountSecret)
 				adminv1Secret.GET("/paging", handler.PagingAccountSecret)
 				adminv1Secret.POST("", handler.AddAccountSecret)
+				adminv1Secret.PUT("/enable", handler.SetEnable)
 			}
 
 			serverv1 := adminv1.Group("/server") // 接入服务

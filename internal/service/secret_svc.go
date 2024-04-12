@@ -22,7 +22,7 @@ type SecretSvc struct {
 }
 
 // Add 添加账号密钥
-func (s *SecretSvc) Add(ctx context.Context, account string) error {
+func (s *SecretSvc) Add(ctx context.Context, account string, isEnable uint8) error {
 	exists, err := s.IsExists(ctx, account)
 	if err != nil {
 		return err
@@ -32,20 +32,19 @@ func (s *SecretSvc) Add(ctx context.Context, account string) error {
 		return otperr.ErrRepeatAdd(errors.New(msg))
 	}
 	// 创建一个新的model
-	m, err := s.NewSecretModel(account)
+	m, err := s.NewSecretModel(account, isEnable)
 	if err != nil {
 		return err
 	}
-	// 主备写
 	err = MultiStoreInsert[*model.AccountSecretModel](ctx, m, s.Store, s.StoreBackup)
 	return err
 }
 
 // NewSecretModel 创建一个新的账号密钥model
-func (s *SecretSvc) NewSecretModel(account string) (*model.AccountSecretModel, error) {
+func (s *SecretSvc) NewSecretModel(account string, isEnable uint8) (*model.AccountSecretModel, error) {
 	m := &model.AccountSecretModel{}
 	m.Account = account
-	m.IsEnable = 1
+	m.IsEnable = isEnable
 	// 密钥加密存储
 	var err error
 	m.SecretSeed, err = genSecret(cmd.P.RootKey192, cmd.P.IV)
@@ -70,7 +69,7 @@ func genSecret(rootKey, iv []byte) (string, error) {
 
 // IsExists 账号密钥是否存在
 func (s *SecretSvc) IsExists(ctx context.Context, account string) (bool, error) {
-	secretData, err := s.GetByAccount(ctx, account)
+	secretData, err := s.GetByAccount(ctx, account, false)
 	if err != nil {
 		return false, err
 	}
@@ -78,7 +77,8 @@ func (s *SecretSvc) IsExists(ctx context.Context, account string) (bool, error) 
 }
 
 // GetByAccount 通过账号获取密钥信息,密钥已解密
-func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.AccountSecretModel, error) {
+// isDecrypt 是否解密账号密钥
+func (s *SecretSvc) GetByAccount(ctx context.Context, account string, isDecrypt bool) (*model.AccountSecretModel, error) {
 	var err error
 	p := &param.SecretParam{Account: account}
 	data, err := MultiStoreSelectByCondition[*param.SecretParam, *model.AccountSecretModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup, s.StoreLocal)
@@ -89,7 +89,7 @@ func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.Ac
 	if secretModel == nil {
 		return nil, nil
 	}
-	err = s.CheckModel(secretModel)
+	err = s.CheckModel(secretModel, isDecrypt)
 	if err != nil {
 		return nil, err
 	}
@@ -97,17 +97,19 @@ func (s *SecretSvc) GetByAccount(ctx context.Context, account string) (*model.Ac
 }
 
 // CheckModel 校验数据,解密账号密钥密文
-func (s *SecretSvc) CheckModel(m *model.AccountSecretModel) error {
+func (s *SecretSvc) CheckModel(m *model.AccountSecretModel, isDecrypt bool) error {
 	check := s.CalcDataCheckSum(m.IsEnable, m.Account, m.SecretSeed)
 	if m.DataCheck != check {
 		msg := fmt.Sprintf("账号密钥数据校验不通过,疑似被篡改,请关注(ID:%d,账号:%s)", m.ID, m.Account)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
-	secret, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.SecretSeed)
-	if err != nil {
-		return otperr.ErrDecrypt(err)
+	if isDecrypt {
+		secret, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.SecretSeed)
+		if err != nil {
+			return otperr.ErrDecrypt(err)
+		}
+		m.SecretSeed = string(secret)
 	}
-	m.SecretSeed = string(secret)
 	return nil
 }
 
@@ -117,7 +119,28 @@ func (s *SecretSvc) CalcDataCheckSum(isEnable uint8, account, secretSeedCipher s
 	return crypt.HmacDigest(cmd.P.RootKey192, data)
 }
 
+// Paging 分页
 func (s *SecretSvc) Paging(ctx context.Context, p *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
-	result, count, err = MultiStorePaging[*param.SecretPagingParam, *model.AccountSecretModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup, s.StoreLocal)
+	result, count, err = MultiStorePaging[*param.SecretPagingParam, *model.AccountSecretModel](ctx, p, s.Store, s.StoreBackup)
 	return
+}
+
+func (s *SecretSvc) SetEnable(ctx context.Context, account string, isEnable uint8) error {
+	m, err := s.GetByAccount(ctx, account, false)
+	if err != nil {
+		return err
+	}
+	if m == nil {
+		return otperr.ErrParamIllegal("账号不存在:" + account)
+	}
+	// 数据一致无需更新
+	if m.IsEnable == isEnable {
+		return nil
+	}
+	checkSum := s.CalcDataCheckSum(isEnable, account, m.SecretSeed)
+	params := make(map[string]any)
+	params["is_enable"] = isEnable
+	params["data_check"] = checkSum
+	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
+	return err
 }
