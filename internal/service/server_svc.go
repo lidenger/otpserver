@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lidenger/otpserver/cmd"
-	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
@@ -36,7 +35,6 @@ func (s *ServerSvc) Add(ctx context.Context, p *param.ServerParam) error {
 	if err != nil {
 		return err
 	}
-	// 主备写
 	err = MultiStoreInsert[*model.ServerModel](ctx, m, s.Store, s.StoreBackup)
 	return err
 }
@@ -83,67 +81,115 @@ func (s *ServerSvc) CalcDataCheckSum(m *model.ServerModel) string {
 
 // IsExists 账号密钥是否存在
 func (s *ServerSvc) IsExists(ctx context.Context, sign string) (bool, error) {
-	secretData, err := s.GetBySign(ctx, sign)
+	secretData, err := s.GetBySign(ctx, sign, false)
 	if err != nil {
 		return false, err
 	}
 	return secretData != nil, nil
 }
 
-func (s *ServerSvc) GetBySign(ctx context.Context, sign string) (*model.ServerModel, error) {
+func (s *ServerSvc) GetBySign(ctx context.Context, sign string, isDecrypt bool) (*model.ServerModel, error) {
 	var err error
-	var serverModel *model.ServerModel
-	serverModel, err = findServerByStore(ctx, sign, s.Store)
+	p := &param.ServerParam{Sign: sign}
+	data, err := MultiStoreSelectByCondition[*param.ServerParam, *model.ServerModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup, s.StoreLocal)
 	if err != nil {
-		if s.StoreBackup == nil {
-			return nil, otperr.ErrStore(err)
-		}
-		log.Warn("主存储获取服务信息异常,尝试从备存储获取,主存储异常信息:%+v", err)
-		var errBackup error
-		serverModel, errBackup = findServerByStore(ctx, sign, s.StoreBackup)
-		if errBackup != nil {
-			log.Error("主备存储都获取失败,主存储err:%+v,备存储err:%+v", err, errBackup)
-			return nil, otperr.ErrStoreBackup(errBackup)
-		}
+		return nil, err
 	}
+	serverModel := util.GetArrFirstItem(data)
 	if serverModel == nil {
 		return nil, nil
 	}
-	err = s.CheckModel(ctx, serverModel)
+	err = s.CheckModel(serverModel, isDecrypt)
 	if err != nil {
 		return nil, err
 	}
 	return serverModel, err
 }
 
-func findServerByStore(ctx context.Context, sign string, s store.ServerStore) (*model.ServerModel, error) {
-	condition := &param.ServerParam{}
-	condition.Sign = sign
-	data, err := s.SelectByCondition(ctx, condition)
-	if err != nil {
-		return nil, err
-	}
-	return util.GetArrFirstItem(data), nil
-}
-
-// CheckModel 校验数据,解密账号密钥密文
-func (s *ServerSvc) CheckModel(ctx context.Context, m *model.ServerModel) error {
+// CheckModel 校验数据
+// isDecrypt 解密服务密钥密文和IV密文
+func (s *ServerSvc) CheckModel(m *model.ServerModel, isDecrypt bool) error {
 	check := s.CalcDataCheckSum(m)
 	if m.DataCheck != check {
 		msg := fmt.Sprintf("服务数据校验不通过,疑似被篡改,请关注(ID:%d,sign:%s)", m.ID, m.Sign)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
-	// 服务密钥
-	secret, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.Secret)
-	if err != nil {
-		return otperr.ErrDecrypt(err)
+	if isDecrypt {
+		// 服务密钥
+		secret, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.Secret)
+		if err != nil {
+			return otperr.ErrDecrypt(err)
+		}
+		m.Secret = string(secret)
+		// 服务密钥IV
+		iv, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.IV)
+		if err != nil {
+			return otperr.ErrDecrypt(err)
+		}
+		m.IV = string(iv)
 	}
-	m.Secret = string(secret)
-	// 服务密钥IV
-	iv, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.IV)
-	if err != nil {
-		return otperr.ErrDecrypt(err)
-	}
-	m.IV = string(iv)
 	return nil
+}
+
+// Paging 分页
+func (s *ServerSvc) Paging(ctx context.Context, p *param.ServerPagingParam) (result []*model.ServerModel, count int64, err error) {
+	result, count, err = MultiStorePaging[*param.ServerPagingParam, *model.ServerModel](ctx, p, s.Store, s.StoreBackup)
+	return
+}
+
+func (s *ServerSvc) SetEnable(ctx context.Context, serverSign string, isEnable uint8) error {
+	m, err := s.GetBySign(ctx, serverSign, false)
+	if err != nil {
+		return err
+	}
+	if m == nil {
+		return otperr.ErrParamIllegal("服务不存在:" + serverSign)
+	}
+	// 数据一致无需更新
+	if m.IsEnable == isEnable {
+		return nil
+	}
+	checkSum := s.CalcDataCheckSum(m)
+	params := make(map[string]any)
+	params["is_enable"] = isEnable
+	params["data_check"] = checkSum
+	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
+	return err
+}
+
+func (s *ServerSvc) Edit(ctx context.Context, p *param.ServerParam) error {
+	m, err := s.GetBySign(ctx, p.Sign, false)
+	if err != nil {
+		return err
+	}
+	if m == nil {
+		return otperr.ErrParamIllegal("服务不存在:" + p.Sign)
+	}
+	um := &model.ServerModel{}
+	um.Sign = p.Sign
+	um.IsEnable = m.IsEnable
+	um.IsOperateSensitiveData = m.IsOperateSensitiveData
+	um.Name = m.Name
+	um.Remark = m.Remark
+	params := make(map[string]any)
+	if p.IsEnable != 0 {
+		um.IsEnable = p.IsEnable
+		params["is_enable"] = p.IsEnable
+	}
+	if p.IsOperateSensitiveData != 0 {
+		um.IsOperateSensitiveData = p.IsOperateSensitiveData
+		params["is_operate_sensitive_data"] = p.IsOperateSensitiveData
+	}
+	if len(p.Name) != 0 {
+		um.Name = p.Name
+		params["server_name"] = p.Name
+	}
+	if len(p.Remark) != 0 {
+		um.Remark = p.Remark
+		params["server_remark"] = p.Remark
+	}
+	checkSum := s.CalcDataCheckSum(um)
+	params["data_check"] = checkSum
+	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
+	return err
 }

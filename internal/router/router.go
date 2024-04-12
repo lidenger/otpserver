@@ -47,8 +47,10 @@ func api(g *gin.Engine) {
 
 			serverv1 := adminv1.Group("/server") // 接入服务
 			{
-				serverv1.POST("", handler.AddServer)     // 新增服务
-				serverv1.GET(":sign", handler.GetServer) // 获取服务信息
+				serverv1.POST("", handler.AddServer) // 新增服务
+				serverv1.GET("/paging", handler.PagingAccountSecret)
+				serverv1.POST("", handler.AddAccountSecret)
+				serverv1.PUT("/enable", handler.SetEnable)
 			}
 		}
 	}
