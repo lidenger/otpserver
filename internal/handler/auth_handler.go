@@ -66,7 +66,7 @@ func VerifyAccessToken(c *gin.Context) {
 
 // 验证服务sign
 func verifySign(c *gin.Context, serverSign string) (bool, *model.ServerModel) {
-	s, err := service.ServerSvcIns.GetBySign(c, serverSign)
+	s, err := service.ServerSvcIns.GetBySign(c, serverSign, false)
 	if err != nil {
 		result.R(c, err, "")
 		return false, nil

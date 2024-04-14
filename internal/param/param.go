@@ -19,10 +19,10 @@ type SecretPagingParam struct {
 
 type ServerParam struct {
 	ID                     int64  `json:"id"`
-	Sign                   string `json:"sign" valid:"required"`
-	Name                   string `json:"name" valid:"required"`
-	Remark                 string `json:"remark"`
-	IsEnable               uint8  `json:"is_enable"`
+	Sign                   string `json:"serverSign" valid:"required"`
+	Name                   string `json:"serverName" valid:"required"`
+	Remark                 string `json:"serverRemark"`
+	IsEnable               uint8  `json:"isEnable"`
 	IsOperateSensitiveData uint8  `json:"isOperateSensitiveData"` // 是否可以操作敏感数据（例如：密钥数据），1是，2否
 }
 

@@ -42,7 +42,7 @@ func PagingAccountSecret(ctx *gin.Context) {
 	result.R(ctx, err, result.MakePagingResult(data, total))
 }
 
-func SetEnable(ctx *gin.Context) {
+func SetSecretEnable(ctx *gin.Context) {
 	var p *param.SecretParam
 	p = validParam(ctx, p)
 	if p == nil {

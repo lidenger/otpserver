@@ -30,7 +30,6 @@ func (s *ServerSvc) Add(ctx context.Context, p *param.ServerParam) error {
 		msg := fmt.Sprintf("服务%s已存在不能重复添加", p.Sign)
 		return otperr.ErrRepeatAdd(errors.New(msg))
 	}
-	// 创建一个新的model
 	m, err := s.NewServerModel(p)
 	if err != nil {
 		return err
@@ -45,12 +44,13 @@ func (s *ServerSvc) NewServerModel(p *param.ServerParam) (*model.ServerModel, er
 	m.Sign = p.Sign
 	m.Remark = p.Remark
 	m.IsEnable = p.IsEnable
+	m.IsOperateSensitiveData = p.IsOperateSensitiveData
 	// 默认启用
-	if m.IsEnable == 0 {
+	if p.IsEnable == 0 {
 		m.IsEnable = 1
 	}
 	// 默认不启用操作敏感信息
-	if m.IsOperateSensitiveData == 0 {
+	if p.IsOperateSensitiveData == 0 {
 		m.IsOperateSensitiveData = 2
 	}
 	// 服务密钥
@@ -91,7 +91,7 @@ func (s *ServerSvc) IsExists(ctx context.Context, sign string) (bool, error) {
 func (s *ServerSvc) GetBySign(ctx context.Context, sign string, isDecrypt bool) (*model.ServerModel, error) {
 	var err error
 	p := &param.ServerParam{Sign: sign}
-	data, err := MultiStoreSelectByCondition[*param.ServerParam, *model.ServerModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup, s.StoreLocal)
+	data, err := MultiStoreSelectByCondition[*param.ServerParam, *model.ServerModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup)
 	if err != nil {
 		return nil, err
 	}
@@ -137,27 +137,8 @@ func (s *ServerSvc) Paging(ctx context.Context, p *param.ServerPagingParam) (res
 	return
 }
 
-func (s *ServerSvc) SetEnable(ctx context.Context, serverSign string, isEnable uint8) error {
-	m, err := s.GetBySign(ctx, serverSign, false)
-	if err != nil {
-		return err
-	}
-	if m == nil {
-		return otperr.ErrParamIllegal("服务不存在:" + serverSign)
-	}
-	// 数据一致无需更新
-	if m.IsEnable == isEnable {
-		return nil
-	}
-	checkSum := s.CalcDataCheckSum(m)
-	params := make(map[string]any)
-	params["is_enable"] = isEnable
-	params["data_check"] = checkSum
-	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
-	return err
-}
-
-func (s *ServerSvc) Edit(ctx context.Context, p *param.ServerParam) error {
+// SetEnable 更新启用状态和操作敏感信息状态
+func (s *ServerSvc) SetEnable(ctx context.Context, p *param.ServerParam) error {
 	m, err := s.GetBySign(ctx, p.Sign, false)
 	if err != nil {
 		return err
@@ -165,31 +146,48 @@ func (s *ServerSvc) Edit(ctx context.Context, p *param.ServerParam) error {
 	if m == nil {
 		return otperr.ErrParamIllegal("服务不存在:" + p.Sign)
 	}
-	um := &model.ServerModel{}
-	um.Sign = p.Sign
-	um.IsEnable = m.IsEnable
-	um.IsOperateSensitiveData = m.IsOperateSensitiveData
-	um.Name = m.Name
-	um.Remark = m.Remark
+	// 进一步验证参数正确性
+	if m.ID != p.ID {
+		return otperr.ErrParamIllegal(fmt.Sprintf("非法参数:%d", p.ID))
+	}
+	// 数据一致无需更新
+	if m.IsEnable == p.IsEnable && m.IsOperateSensitiveData == p.IsOperateSensitiveData {
+		return nil
+	}
+	m.IsEnable = p.IsEnable
+	m.IsOperateSensitiveData = p.IsOperateSensitiveData
+	checkSum := s.CalcDataCheckSum(m)
 	params := make(map[string]any)
-	if p.IsEnable != 0 {
-		um.IsEnable = p.IsEnable
-		params["is_enable"] = p.IsEnable
+	params["is_enable"] = m.IsEnable
+	params["is_operate_sensitive_data"] = m.IsOperateSensitiveData
+	params["data_check"] = checkSum
+	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
+	return err
+}
+
+func (s *ServerSvc) EditBase(ctx context.Context, p *param.ServerParam) error {
+	m, err := s.GetBySign(ctx, p.Sign, false)
+	if err != nil {
+		return err
 	}
-	if p.IsOperateSensitiveData != 0 {
-		um.IsOperateSensitiveData = p.IsOperateSensitiveData
-		params["is_operate_sensitive_data"] = p.IsOperateSensitiveData
+	if m == nil {
+		return otperr.ErrParamIllegal("服务不存在:" + p.Sign)
 	}
+	// 进一步验证参数正确性
+	if m.ID != p.ID {
+		return otperr.ErrParamIllegal(fmt.Sprintf("非法参数:%d", p.ID))
+	}
+	// 数据一致无需更新
+	if m.Name == p.Name && m.Remark == p.Remark {
+		return nil
+	}
+	params := make(map[string]any)
 	if len(p.Name) != 0 {
-		um.Name = p.Name
 		params["server_name"] = p.Name
 	}
 	if len(p.Remark) != 0 {
-		um.Remark = p.Remark
 		params["server_remark"] = p.Remark
 	}
-	checkSum := s.CalcDataCheckSum(um)
-	params["data_check"] = checkSum
 	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
 	return err
 }
