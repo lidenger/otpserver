@@ -37,20 +37,21 @@ func api(g *gin.Engine) {
 		adminv1 := v1.Group("/admin") // 管理平台
 		adminv1.Use(middleware.AdminAuth)
 		{
-			adminv1Secret := adminv1.Group("/secret")
+			adminv1Secret := adminv1.Group("/secret") // 账号密钥
 			{
 				adminv1Secret.GET(":account", handler.GetAccountSecret)
 				adminv1Secret.GET("/paging", handler.PagingAccountSecret)
 				adminv1Secret.POST("", handler.AddAccountSecret)
-				adminv1Secret.PUT("/enable", handler.SetEnable)
+				adminv1Secret.PUT("/enable", handler.SetSecretEnable)
 			}
 
 			serverv1 := adminv1.Group("/server") // 接入服务
 			{
-				serverv1.POST("", handler.AddServer) // 新增服务
-				serverv1.GET("/paging", handler.PagingAccountSecret)
-				serverv1.POST("", handler.AddAccountSecret)
-				serverv1.PUT("/enable", handler.SetEnable)
+				serverv1.GET(":sign", handler.GetServer)
+				serverv1.GET("/paging", handler.PagingServer)
+				serverv1.POST("", handler.AddServer)
+				serverv1.PUT("/base", handler.EditBase)
+				serverv1.PUT("/enable", handler.SetServerEnable)
 			}
 		}
 	}
