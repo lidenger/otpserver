@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"fmt"
-	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/config/storeconf"
@@ -87,7 +86,7 @@ var activeStore = make([]storeconf.Status, 0)
 
 func Initialize() {
 	conf := serverconf.GetSysConf()
-	c := cmd.P
+	c := conf.Store
 	if c.MainStore == "" {
 		panic("主存储类型不能为空")
 	}
@@ -97,6 +96,7 @@ func Initialize() {
 		log.Warn("注意：主备存储设置一致，当前模式为弃用备存储!")
 		c.BackupStore = ""
 	}
+	isKnownStore := false
 	if util.Eqs(enum.MySQLStore, c.MainStore, c.BackupStore) {
 		mysqlconf.Initialize(conf)
 		err := mysqlconf.MySQLConfIns.TestStore()
@@ -104,14 +104,18 @@ func Initialize() {
 			log.Error("MySQL检测不通过，err:%s", err.Error())
 		}
 		activeStore = append(activeStore, mysqlconf.MySQLConfIns)
-	} else if util.Eqs(enum.PostGreSQLStore, c.MainStore, c.BackupStore) {
+		isKnownStore = true
+	}
+	if util.Eqs(enum.PostGreSQLStore, c.MainStore, c.BackupStore) {
 		pgsqlconf.Initialize(conf)
 		err := pgsqlconf.PgSQLConfIns.TestStore()
 		if err != nil {
 			log.Error("PostgreSQL检测不通过，err:%s", err.Error())
 		}
 		activeStore = append(activeStore, pgsqlconf.PgSQLConfIns)
-	} else {
+		isKnownStore = true
+	}
+	if !isKnownStore {
 		panic("不支持的存储类型:" + c.MainStore)
 	}
 	builder := &strings.Builder{}
@@ -120,7 +124,7 @@ func Initialize() {
 	if c.BackupStore == "" {
 		builder.WriteString("备存储:未启用")
 	} else {
-		builder.WriteString(fmt.Sprintf("备存储:%s,", c.BackupStore))
+		builder.WriteString(fmt.Sprintf("备存储:%s", c.BackupStore))
 	}
 	log.Info("%s", builder.String())
 	// 启用本地存储

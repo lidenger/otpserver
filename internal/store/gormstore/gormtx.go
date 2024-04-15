@@ -1,21 +1,21 @@
-package mysqlstore
+package gormstore
 
 import (
 	"github.com/lidenger/otpserver/internal/store"
 	"gorm.io/gorm"
 )
 
-type mysqlTx struct {
+type gromTx struct {
 	tx *gorm.DB
 }
 
-func (t *mysqlTx) Commit() {
+func (t *gromTx) Commit() {
 	t.tx.Commit()
 }
-func (t *mysqlTx) Rollback() {
+func (t *gromTx) Rollback() {
 	t.tx.Rollback()
 }
 
 func getTx(db *gorm.DB) store.Tx {
-	return &mysqlTx{tx: db}
+	return &gromTx{tx: db}
 }

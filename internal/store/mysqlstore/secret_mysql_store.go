@@ -5,8 +5,8 @@ import (
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
+	"github.com/lidenger/otpserver/internal/store/gormstore"
 	"gorm.io/gorm"
-	"time"
 )
 
 type SecretStore struct {
@@ -25,57 +25,26 @@ func (s *SecretStore) SetStoreErr(err error) {
 	s.err = err
 }
 
+func (s *SecretStore) GetDB() *gorm.DB {
+	return s.DB
+}
+
 func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (store.Tx, error) {
-	tx := s.DB.Begin()
-	tx = tx.Create(m)
-	return getTx(tx), tx.Error
+	return gormstore.SecretInsert(ctx, s.DB, m)
 }
 
 func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) (store.Tx, error) {
-	tx := s.DB.Begin()
-	tx = tx.Model(&model.AccountSecretModel{})
-	tx = tx.Where("id = ?", ID)
-	params["update_time"] = time.Now()
-	tx = tx.Updates(params)
-	return getTx(tx), tx.Error
+	return gormstore.SecretUpdate(ctx, s.DB, ID, params)
 }
 
 func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
-	db := store.ConfigPagingParam(param.PageNo, param.PageSize, s.DB)
-	if param.SearchTxt != "" {
-		if param.SearchTxt == "启用" {
-			db = db.Where("is_enable = 1")
-		} else if param.SearchTxt == "禁用" {
-			db = db.Where("is_enable = 2")
-		} else {
-			db = db.Where("account like ?", "%"+param.SearchTxt+"%")
-		}
-	}
-	err = db.Order("update_time desc").Find(&result).
-		Offset(-1).
-		Limit(-1).
-		Count(&count).
-		Error
-	return
+	return gormstore.SecretPaging(ctx, s.DB, param)
 }
 
 func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.SecretParam) (result []*model.AccountSecretModel, err error) {
-	db := s.DB
-	if condition.ID != 0 {
-		db = db.Where("ID = ?", condition.ID)
-	}
-	if condition.IsEnable != 0 {
-		db = db.Where("is_enable = ?", condition.IsEnable)
-	}
-	if condition.Account != "" {
-		db = db.Where("account = ?", condition.Account)
-	}
-	err = db.Order("update_time desc").Find(&result).Error
-	return
+	return gormstore.SecretSelectByCondition(ctx, s.DB, condition)
 }
 
 func (s *SecretStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {
-	tx := s.DB.Begin()
-	tx = tx.Delete(&model.AccountSecretModel{}, ID)
-	return getTx(tx), tx.Error
+	return gormstore.SecretDelete(ctx, s.DB, ID)
 }

@@ -35,6 +35,13 @@ type M struct {
 		MaxOpenConn     int    `toml:"maxOpenConn"`
 		ConnMaxWaitTime string `toml:"connMaxWaitTime"`
 	} `toml:"mysql"`
+	PgSQL struct {
+		Host     string `toml:"host"`
+		Port     string `toml:"port"`
+		UserName string `toml:"userName"`
+		Password string `toml:"password@cipher"`
+		DbName   string `toml:"dbName"`
+	} `toml:"pgsql"`
 }
 
 type NacosM struct {
