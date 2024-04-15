@@ -23,8 +23,6 @@ type Param struct {
 	EncryptData string // 工具模式-加密的源数据
 	ConfSource  string // 配置来源 nacos,local,default
 	ConfFile    string // 配置文件
-	MainStore   string // 主存储 mysql,pgsql,oracle
-	BackupStore string // 备存储 mysql,pgsql,oracle
 	AppKeyFile  string // app key file 路径
 	*Crypt
 }
@@ -47,8 +45,6 @@ func InitParam() {
 	flag.BoolVar(&P.IsToolMode, "tool", false, "工具模式")
 	flag.BoolVar(&P.Encrypt, "encrypt", false, "工具模式-加密")
 	flag.StringVar(&P.EncryptData, "data", "", "工具模式-加密数据")
-	flag.StringVar(&P.MainStore, "mainStore", "mysql", "主存储[mysql,pgsql,oracle]")
-	flag.StringVar(&P.BackupStore, "backupStore", "", "备存储[mysql,pgsql,oracle]")
 	flag.StringVar(&P.AppKeyFile, "keyFile", "app.key", "系统启动KEY文件[app.key]")
 	flag.Parse()
 }

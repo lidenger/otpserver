@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/config/storeconf/mysqlconf"
@@ -21,7 +20,9 @@ var ServerSvcIns = &ServerSvc{}
 var svcStoreStatusMap = make(map[string][]store.HealthFunc)
 
 func Initialize() {
-	switch cmd.P.MainStore {
+	conf := serverconf.GetSysConf()
+
+	switch conf.Store.MainStore {
 	case enum.MySQLStore:
 		SecretSvcIns.Store = &mysqlstore.SecretStore{DB: mysqlconf.DB}
 		ServerSvcIns.Store = &mysqlstore.ServerStore{DB: mysqlconf.DB}
@@ -30,7 +31,8 @@ func Initialize() {
 		SecretSvcIns.Store = &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
 		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store)
 	}
-	switch cmd.P.BackupStore {
+
+	switch conf.Store.BackupStore {
 	case enum.MySQLStore:
 		SecretSvcIns.StoreBackup = &mysqlstore.SecretStore{DB: mysqlconf.DB}
 		ServerSvcIns.StoreBackup = &mysqlstore.ServerStore{DB: mysqlconf.DB}
@@ -40,8 +42,6 @@ func Initialize() {
 		ServerSvcIns.StoreBackup = &mysqlstore.ServerStore{DB: pgsqlconf.DB}
 		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup)
 	}
-
-	conf := serverconf.GetSysConf()
 
 	if conf.Server.IsEnableLocalStore {
 		SecretSvcIns.StoreLocal = &localstore.SecretStore{}
