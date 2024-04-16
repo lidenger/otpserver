@@ -24,17 +24,22 @@ func (s *SecretStore) SetStoreErr(err error) {
 
 func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (store.Tx, error) {
 
-	return nil, nil
+	return &store.EmptyTx{}, nil
 }
 
 func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]any) (store.Tx, error) {
 
-	return nil, nil
+	return &store.EmptyTx{}, nil
 }
 
 func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
 
 	return nil, 0, nil
+}
+
+func (s *SecretStore) SelectById(ctx context.Context, ID int64) (*model.AccountSecretModel, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.SecretParam) ([]*model.AccountSecretModel, error) {
@@ -44,5 +49,5 @@ func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.Se
 
 func (s *SecretStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {
 
-	return nil, nil
+	return &store.EmptyTx{}, nil
 }

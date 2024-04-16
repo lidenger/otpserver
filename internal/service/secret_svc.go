@@ -18,7 +18,6 @@ type SecretSvc struct {
 	Store       store.SecretStore // 主存储
 	StoreBackup store.SecretStore // 备存储
 	StoreMemory store.SecretStore // 内存存储
-	StoreLocal  store.SecretStore // 本地存储
 }
 
 // Add 添加账号密钥
@@ -81,7 +80,7 @@ func (s *SecretSvc) IsExists(ctx context.Context, account string) (bool, error) 
 func (s *SecretSvc) GetByAccount(ctx context.Context, account string, isDecrypt bool) (*model.AccountSecretModel, error) {
 	var err error
 	p := &param.SecretParam{Account: account}
-	data, err := MultiStoreSelectByCondition[*param.SecretParam, *model.AccountSecretModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup, s.StoreLocal)
+	data, err := MultiStoreSelectByCondition[*param.SecretParam, *model.AccountSecretModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup)
 	if err != nil {
 		return nil, err
 	}

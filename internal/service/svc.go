@@ -62,7 +62,7 @@ func MultiStoreInsert[T any](ctx context.Context, m T, main, backup store.Insert
 }
 
 // MultiStoreSelectByCondition 多store 条件查询
-func MultiStoreSelectByCondition[P any, R any](ctx context.Context, p P, stores ...store.SelectByConditionFunc[P, R]) (result []R, err error) {
+func MultiStoreSelectByCondition[P any, R any](ctx context.Context, p P, stores ...store.SelectFunc[P, R]) (result []R, err error) {
 	for _, s := range stores {
 		err = storeHealthCheck(s)
 		if err != nil {

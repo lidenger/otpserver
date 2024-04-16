@@ -11,8 +11,9 @@ const (
 	Unauthorized   CODE = 401001 // 权限不足
 	ReqOverLimit   CODE = 429001 // 请求超限
 
-	ServerErr     CODE = 500000 // 服务异常
-	ServerUnready CODE = 500001 // 服务未准备就绪
+	ServerErr            CODE = 500000 // 服务异常
+	ServerUnready        CODE = 500001 // 服务未准备就绪
+	ServerFuncNonsupport CODE = 500002 // 服务未支持的功能
 
 	StoreErr       CODE = 500010 // 存储异常
 	StoreBackupErr CODE = 500011 // 备存储异常
