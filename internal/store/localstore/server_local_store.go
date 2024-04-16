@@ -37,6 +37,11 @@ func (s *ServerStore) Paging(ctx context.Context, param *param.ServerPagingParam
 	return nil, 0, nil
 }
 
+func (s *ServerStore) SelectById(ctx context.Context, ID int64) (*model.ServerModel, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (s *ServerStore) SelectByCondition(ctx context.Context, condition *param.ServerParam) ([]*model.ServerModel, error) {
 
 	return nil, nil

@@ -44,9 +44,10 @@ type PagingFunc[P any, R any] interface {
 	Paging(ctx context.Context, param P) (result []R, count int64, err error)
 }
 
-type SelectByConditionFunc[P any, R any] interface {
+type SelectFunc[P any, R any] interface {
 	HealthFunc
 	SelectByCondition(ctx context.Context, condition P) (result []R, err error)
+	SelectById(ctx context.Context, ID int64) (R, error)
 }
 
 // SecretStore 账号密钥
@@ -55,7 +56,7 @@ type SecretStore interface {
 	UpdateFunc
 	DeleteFunc
 	PagingFunc[*param.SecretPagingParam, *model.AccountSecretModel]
-	SelectByConditionFunc[*param.SecretParam, *model.AccountSecretModel]
+	SelectFunc[*param.SecretParam, *model.AccountSecretModel]
 }
 
 // ServerStore 接入的服务
@@ -64,7 +65,7 @@ type ServerStore interface {
 	UpdateFunc
 	DeleteFunc
 	PagingFunc[*param.ServerPagingParam, *model.ServerModel]
-	SelectByConditionFunc[*param.ServerParam, *model.ServerModel]
+	SelectFunc[*param.ServerParam, *model.ServerModel]
 }
 
 // Tx 事务，这里定义事务接口，不依赖于具体的框架实现，降低耦合
@@ -73,13 +74,18 @@ type Tx interface {
 	Rollback()
 }
 
-// ConfigPagingParam 设置db分页参数
-func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
-	if pageNo != 0 && pageSize != 0 {
-		offset := (pageNo - 1) * pageSize
-		db = db.Offset(offset).Limit(pageSize)
-	}
-	return db
+type EmptyTx struct{}
+
+func (e *EmptyTx) Commit()   {}
+func (e *EmptyTx) Rollback() {}
+
+var EmptyTxIns = &EmptyTx{}
+
+// CacheStore 缓存存储
+type CacheStore interface {
+	LoadAll(ctx context.Context) error
+	Remove(ctx context.Context, param string)
+	Refresh(ctx context.Context, param string) error
 }
 
 var activeStore = make([]storeconf.Status, 0)
@@ -142,4 +148,13 @@ func Initialize() {
 // GetAllActiveStore 获取所有启用的store
 func GetAllActiveStore() []storeconf.Status {
 	return activeStore
+}
+
+// ConfigPagingParam 设置db分页参数
+func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
+	if pageNo != 0 && pageSize != 0 {
+		offset := (pageNo - 1) * pageSize
+		db = db.Offset(offset).Limit(pageSize)
+	}
+	return db
 }

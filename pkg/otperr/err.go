@@ -27,8 +27,7 @@ func (e *Err) GetCode() code.CODE {
 	return e.code
 }
 
-// ErrParamIllegal 非法参数
-func ErrParamIllegal(param any) IErr {
+func wrapStrErr(param any) error {
 	var err error
 	if x, ok := param.(error); ok {
 		err = x
@@ -36,8 +35,13 @@ func ErrParamIllegal(param any) IErr {
 	if x, ok := param.(string); ok {
 		err = errors.New(x)
 	}
+	return err
+}
+
+// ErrParamIllegal 非法参数
+func ErrParamIllegal(param any) IErr {
 	return &Err{
-		error:    err,
+		error:    wrapStrErr(param),
 		httpCode: http.StatusBadRequest,
 		code:     code.ParamIllegal,
 	}
@@ -86,11 +90,20 @@ func ErrReqOverLimit(format string, arg ...any) IErr {
 }
 
 // ErrServerUnReady 服务未准备就绪
-func ErrServerUnReady(err error) IErr {
+func ErrServerUnReady(param any) IErr {
 	return &Err{
-		error:    err,
+		error:    wrapStrErr(param),
 		httpCode: http.StatusServiceUnavailable,
 		code:     code.ServerUnready,
+	}
+}
+
+// ErrServerFuncNonsupport 服务未支持的功能
+func ErrServerFuncNonsupport(param any) IErr {
+	return &Err{
+		error:    wrapStrErr(param),
+		httpCode: http.StatusNotImplemented,
+		code:     code.ServerFuncNonsupport,
 	}
 }
 

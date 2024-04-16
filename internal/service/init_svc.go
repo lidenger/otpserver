@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/config/storeconf/mysqlconf"
@@ -22,40 +23,68 @@ var svcStoreStatusMap = make(map[string][]store.HealthFunc)
 func Initialize() {
 	conf := serverconf.GetSysConf()
 
+	mysqlSecretStore := &mysqlstore.SecretStore{DB: mysqlconf.DB}
+	mysqlServerStore := &mysqlstore.ServerStore{DB: mysqlconf.DB}
+
+	pgsqlSecretStore := &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
+	pgsqlServerStore := &pgsqlstore.ServerStore{DB: pgsqlconf.DB}
+
+	localSecretStore := &localstore.SecretStore{}
+	localServerStore := &localstore.ServerStore{}
+
+	memoryDependSecretStoreArr := make([]store.SecretStore, 0)
+	memoryDependServerStoreArr := make([]store.ServerStore, 0)
+
 	switch conf.Store.MainStore {
 	case enum.MySQLStore:
-		SecretSvcIns.Store = &mysqlstore.SecretStore{DB: mysqlconf.DB}
-		ServerSvcIns.Store = &mysqlstore.ServerStore{DB: mysqlconf.DB}
+		SecretSvcIns.Store = mysqlSecretStore
+		ServerSvcIns.Store = mysqlServerStore
 		addSvcStore(enum.MySQLStore, SecretSvcIns.Store, ServerSvcIns.Store)
 	case enum.PostGreSQLStore:
-		SecretSvcIns.Store = &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
-		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store)
+		SecretSvcIns.Store = pgsqlSecretStore
+		ServerSvcIns.Store = pgsqlServerStore
+		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store, ServerSvcIns.Store)
 	}
 
 	switch conf.Store.BackupStore {
 	case enum.MySQLStore:
-		SecretSvcIns.StoreBackup = &mysqlstore.SecretStore{DB: mysqlconf.DB}
-		ServerSvcIns.StoreBackup = &mysqlstore.ServerStore{DB: mysqlconf.DB}
-		addSvcStore(enum.MySQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup)
+		SecretSvcIns.StoreBackup = mysqlSecretStore
+		ServerSvcIns.StoreBackup = mysqlServerStore
+		addSvcStore(enum.MySQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.Store)
 	case enum.PostGreSQLStore:
-		SecretSvcIns.StoreBackup = &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
-		ServerSvcIns.StoreBackup = &mysqlstore.ServerStore{DB: pgsqlconf.DB}
-		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup)
+		SecretSvcIns.StoreBackup = pgsqlSecretStore
+		ServerSvcIns.StoreBackup = pgsqlServerStore
+		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup)
 	}
 
+	memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, SecretSvcIns.Store, SecretSvcIns.StoreBackup)
+	memoryDependServerStoreArr = append(memoryDependServerStoreArr, ServerSvcIns.Store, ServerSvcIns.StoreBackup)
+
 	if conf.Server.IsEnableLocalStore {
-		SecretSvcIns.StoreLocal = &localstore.SecretStore{}
-		ServerSvcIns.StoreLocal = &localstore.ServerStore{}
-		addSvcStore(enum.LocalStore, SecretSvcIns.StoreLocal, ServerSvcIns.StoreLocal)
+		memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, localSecretStore)
+		memoryDependServerStoreArr = append(memoryDependServerStoreArr, localServerStore)
 	}
 
 	if conf.Server.IsEnableMemoryStore {
-		SecretSvcIns.StoreMemory = &memorystore.SecretStore{}
-		ServerSvcIns.StoreMemory = &memorystore.ServerStore{}
+		secretMemory := &memorystore.SecretStore{Stores: memoryDependSecretStoreArr}
+		SecretSvcIns.StoreMemory = secretMemory
+		cacheLoadData(secretMemory)
+
+		serverMemory := &memorystore.ServerStore{Stores: memoryDependServerStoreArr}
+		ServerSvcIns.StoreMemory = serverMemory
+		cacheLoadData(serverMemory)
+
 		addSvcStore(enum.MemoryStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory)
 	}
 
 	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc")
+}
+
+func cacheLoadData(cache store.CacheStore) {
+	err := cache.LoadAll(context.Background())
+	if err != nil {
+		log.Error("memory存储获取所有数据异常:%s", err.Error())
+	}
 }
 
 func addSvcStore(typ string, funcs ...store.HealthFunc) {

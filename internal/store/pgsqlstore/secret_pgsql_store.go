@@ -41,6 +41,10 @@ func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam
 	return gormstore.SecretPaging(ctx, s.DB, param)
 }
 
+func (s *SecretStore) SelectById(ctx context.Context, ID int64) (*model.AccountSecretModel, error) {
+	return gormstore.SecretSelectById(ctx, s.DB, ID)
+}
+
 func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.SecretParam) (result []*model.AccountSecretModel, err error) {
 	return gormstore.SecretSelectByCondition(ctx, s.DB, condition)
 }

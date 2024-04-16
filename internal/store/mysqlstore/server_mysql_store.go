@@ -37,6 +37,10 @@ func (s *ServerStore) Paging(ctx context.Context, param *param.ServerPagingParam
 	return gormstore.ServerPaging(ctx, s.DB, param)
 }
 
+func (s *ServerStore) SelectById(ctx context.Context, ID int64) (*model.ServerModel, error) {
+	return gormstore.ServerSelectById(ctx, s.DB, ID)
+}
+
 func (s *ServerStore) SelectByCondition(ctx context.Context, condition *param.ServerParam) (result []*model.ServerModel, err error) {
 	return gormstore.ServerSelectByCondition(ctx, s.DB, condition)
 }

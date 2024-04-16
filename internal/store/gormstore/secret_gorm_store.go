@@ -43,6 +43,11 @@ func SecretPaging(ctx context.Context, DB *gorm.DB, param *param.SecretPagingPar
 	return
 }
 
+func SecretSelectById(ctx context.Context, DB *gorm.DB, ID int64) (result *model.AccountSecretModel, err error) {
+	err = DB.First(&result, "id = ?", ID).Error
+	return
+}
+
 func SecretSelectByCondition(ctx context.Context, DB *gorm.DB, condition *param.SecretParam) (result []*model.AccountSecretModel, err error) {
 	db := DB
 	if condition.ID != 0 {
