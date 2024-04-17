@@ -8,10 +8,6 @@ reqLimit = 100
 accessTokenValidHour = 4
 # time token有效期(分钟)
 timeTokenValidMinute = 2
-# 是否启用本地存储（数据冗余一份到本地磁盘） true | false
-isEnableLocalStore = false
-# 是否启用内存存储（数据冗余一份到内存，优先查询） true | false
-isEnableMemoryStore = true
 
 [log]
 # debug info error
@@ -31,6 +27,10 @@ compress = true
 [store]
 mainStore = "mysql"
 backupStore = "pgsql"
+# 是否启用本地存储（数据冗余一份到本地磁盘） true | false
+isEnableLocal = false
+# 是否启用内存存储（数据冗余一份到内存，优先查询） true | false
+isEnableMemory = true
 
 [mysql]
 address = "127.0.0.1:3306"

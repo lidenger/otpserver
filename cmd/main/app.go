@@ -35,10 +35,13 @@ func main() {
 		return
 	}
 	// 正常启动Http服务
+	detectionStoreEventChan := make(chan struct{}, 10)
 	serverconf.Initialize()
 	log.Initialize()
 	store.Initialize()
-	service.Initialize()
+	service.Initialize(detectionStoreEventChan)
+	timer.TriggerDetectionStore()
+	service.LoadAllCacheData()
 	g := router.Initialize()
 	httpPort := serverconf.GetSysConf().Server.Port
 	server := &http.Server{
@@ -53,7 +56,7 @@ func main() {
 	}()
 	log.Info("Http服务已启动,端口:%d", httpPort)
 	// 启动store定期检测
-	timer.StoreHealthCheckTickerStart()
+	timer.StartStoreHealthCheckTicker(detectionStoreEventChan)
 	// 监听退出信号
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -73,7 +76,7 @@ func main() {
 
 func closeRes() {
 	// 关闭store定期检测
-	timer.StoreHealthCheckTickerStop()
+	timer.StopStoreHealthCheckTicker()
 	// 关闭所有激活的store
 	storeArr := store.GetAllActiveStore()
 	for _, s := range storeArr {

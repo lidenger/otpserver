@@ -19,9 +19,13 @@ var ServerSvcIns = &ServerSvc{}
 
 // store type | healthFunc
 var svcStoreStatusMap = make(map[string][]store.HealthFunc)
+var cacheStoreArr = make([]store.CacheStore, 0)
 
-func Initialize() {
+func Initialize(storeDetectionEventChan chan<- struct{}) {
 	conf := serverconf.GetSysConf()
+
+	SecretSvcIns.storeDetectionEventChan = storeDetectionEventChan
+	SecretSvcIns.storeDetectionEventChan = storeDetectionEventChan
 
 	mysqlSecretStore := &mysqlstore.SecretStore{DB: mysqlconf.DB}
 	mysqlServerStore := &mysqlstore.ServerStore{DB: mysqlconf.DB}
@@ -60,19 +64,25 @@ func Initialize() {
 	memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, SecretSvcIns.Store, SecretSvcIns.StoreBackup)
 	memoryDependServerStoreArr = append(memoryDependServerStoreArr, ServerSvcIns.Store, ServerSvcIns.StoreBackup)
 
-	if conf.Server.IsEnableLocalStore {
+	if conf.Store.IsEnableLocal {
 		memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, localSecretStore)
 		memoryDependServerStoreArr = append(memoryDependServerStoreArr, localServerStore)
 	}
 
-	if conf.Server.IsEnableMemoryStore {
-		secretMemory := &memorystore.SecretStore{Stores: memoryDependSecretStoreArr}
+	if conf.Store.IsEnableMemory {
+		secretMemory := &memorystore.SecretStore{
+			Stores:                  memoryDependSecretStoreArr,
+			StoreDetectionEventChan: storeDetectionEventChan,
+		}
 		SecretSvcIns.StoreMemory = secretMemory
-		cacheLoadData(secretMemory)
+		cacheStoreArr = append(cacheStoreArr, secretMemory)
 
-		serverMemory := &memorystore.ServerStore{Stores: memoryDependServerStoreArr}
+		serverMemory := &memorystore.ServerStore{
+			Stores:                  memoryDependServerStoreArr,
+			StoreDetectionEventChan: storeDetectionEventChan,
+		}
 		ServerSvcIns.StoreMemory = serverMemory
-		cacheLoadData(serverMemory)
+		cacheStoreArr = append(cacheStoreArr, serverMemory)
 
 		addSvcStore(enum.MemoryStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory)
 	}
@@ -80,10 +90,12 @@ func Initialize() {
 	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc")
 }
 
-func cacheLoadData(cache store.CacheStore) {
-	err := cache.LoadAll(context.Background())
-	if err != nil {
-		log.Error("memory存储获取所有数据异常:%s", err.Error())
+func LoadAllCacheData() {
+	for _, cache := range cacheStoreArr {
+		err := cache.LoadAll(context.Background())
+		if err != nil {
+			log.Error("memory存储获取所有数据异常:%s", err.Error())
+		}
 	}
 }
 

@@ -38,16 +38,13 @@ func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam
 }
 
 func (s *SecretStore) SelectById(ctx context.Context, ID int64) (*model.AccountSecretModel, error) {
-	//TODO implement me
-	panic("implement me")
+	return nil, nil
 }
 
 func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.SecretParam) ([]*model.AccountSecretModel, error) {
-
 	return nil, nil
 }
 
 func (s *SecretStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {
-
 	return &store.EmptyTx{}, nil
 }
