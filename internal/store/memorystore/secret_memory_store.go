@@ -2,16 +2,20 @@ package memorystore
 
 import (
 	"context"
+	"errors"
+	"github.com/jinzhu/copier"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/otperr"
 	"github.com/lidenger/otpserver/pkg/util"
+	"time"
 )
 
 type SecretStore struct {
-	Stores []store.SecretStore // 可用的持久化存储，例如：MySQL,PostgreSQL,本地文件
-	err    error
+	Stores                  []store.SecretStore // 可用的持久化存储，例如：MySQL,PostgreSQL,本地文件
+	StoreDetectionEventChan chan<- struct{}
+	err                     error
 }
 
 // account | model
@@ -44,6 +48,12 @@ func (s *SecretStore) LoadAll(ctx context.Context) error {
 	p.PageSize = 100
 	for {
 		data, _, err := s.getAvailableStore().Paging(ctx, p)
+		// 查询异常做一次store的检测，重新查询一次
+		if err != nil {
+			s.StoreDetectionEventChan <- struct{}{}
+			time.Sleep(3 * time.Second)
+			data, _, err = s.getAvailableStore().Paging(ctx, p)
+		}
 		if err != nil {
 			return err
 		}
@@ -59,34 +69,52 @@ func (s *SecretStore) LoadAll(ctx context.Context) error {
 	return nil
 }
 
-func (s *SecretStore) Remove(ctx context.Context, account string) {
-	delete(secretCacheMap, account)
+func (s *SecretStore) Remove(_ context.Context, p any) {
+	if sp, ok := p.(*param.SecretParam); ok {
+		delete(secretCacheMap, sp.Account)
+	}
 }
 
-func (s *SecretStore) Refresh(ctx context.Context, account string) error {
+func (s *SecretStore) Refresh(ctx context.Context, par any) error {
+	account := ""
+	if sp, ok := par.(*param.SecretParam); ok {
+		account = sp.Account
+	} else {
+		return errors.New("非法参数")
+	}
 	// 从存储中获取一份
 	p := &param.SecretParam{Account: account}
 	ms, err := s.getAvailableStore().SelectByCondition(ctx, p)
+	if err != nil {
+		s.StoreDetectionEventChan <- struct{}{}
+		time.Sleep(3 * time.Second)
+		ms, err = s.getAvailableStore().SelectByCondition(ctx, p)
+	}
 	if err != nil {
 		return err
 	}
 	m := util.GetArrFirstItem(ms)
 	if m == nil {
 		// 存储中没有，删除缓存
-		s.Remove(ctx, account)
+		s.Remove(ctx, p)
 	} else {
-		secretCacheMap[account] = m
+		secretCacheMap[p.Account] = m
 	}
 	return nil
 }
 
 func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (store.Tx, error) {
-	err := s.Refresh(ctx, m.Account)
+	err := s.Refresh(ctx, &param.SecretParam{Account: m.Account})
 	return store.EmptyTxIns, err
 }
 
 func (s *SecretStore) Update(ctx context.Context, ID int64, _ map[string]any) (store.Tx, error) {
 	m, err := s.getAvailableStore().SelectById(ctx, ID)
+	if err != nil {
+		s.StoreDetectionEventChan <- struct{}{}
+		time.Sleep(3 * time.Second)
+		m, err = s.getAvailableStore().SelectById(ctx, ID)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -98,27 +126,42 @@ func (s *SecretStore) Update(ctx context.Context, ID int64, _ map[string]any) (s
 }
 
 // Paging 暂不提供内存分页功能
-func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
+func (s *SecretStore) Paging(_ context.Context, _ *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
 	err = otperr.ErrServerFuncNonsupport("暂不提供Memory分页Secret功能")
 	return
 }
 
-func (s *SecretStore) SelectById(ctx context.Context, ID int64) (*model.AccountSecretModel, error) {
+func (s *SecretStore) SelectById(_ context.Context, ID int64) (*model.AccountSecretModel, error) {
 	for _, m := range secretCacheMap {
 		if m.ID == ID {
-			return m, nil
+			// 不影响原始数据
+			m2 := &model.AccountSecretModel{}
+			err := copier.Copy(m2, m)
+			if err != nil {
+				return nil, err
+			}
+			return m2, nil
 		}
 	}
 	return nil, nil
 }
 
-func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.SecretParam) ([]*model.AccountSecretModel, error) {
+func (s *SecretStore) SelectByCondition(_ context.Context, condition *param.SecretParam) ([]*model.AccountSecretModel, error) {
 	if len(condition.Account) < 1 {
 		return nil, nil
 	}
-	m := secretCacheMap[condition.Account]
+	m, ok := secretCacheMap[condition.Account]
+	if !ok {
+		return nil, nil
+	}
 	result := make([]*model.AccountSecretModel, 0)
-	result = append(result, m)
+	// 不影响原始数据
+	m2 := &model.AccountSecretModel{}
+	err := copier.Copy(m2, m)
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, m2)
 	return result, nil
 }
 
@@ -128,7 +171,7 @@ func (s *SecretStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {
 		return nil, err
 	}
 	if m != nil {
-		s.Remove(ctx, m.Account)
+		s.Remove(ctx, &param.SecretParam{Account: m.Account})
 	}
 	return store.EmptyTxIns, nil
 }

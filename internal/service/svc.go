@@ -11,10 +11,13 @@ import (
 type doubleWriteFunc func() (store.Tx, error)
 
 // DoubleWrite 主备写
-func DoubleWrite(exec, execBackup doubleWriteFunc) error {
+func DoubleWrite(storeDetectionEventChan chan<- struct{}, exec, execBackup doubleWriteFunc) error {
 	// 主存储
 	tx, err := exec()
 	if err != nil {
+		go func() {
+			storeDetectionEventChan <- struct{}{}
+		}()
 		if tx != nil {
 			tx.Rollback()
 		}
@@ -28,6 +31,9 @@ func DoubleWrite(exec, execBackup doubleWriteFunc) error {
 	// 备存储
 	tx2, err2 := execBackup()
 	if err2 != nil {
+		go func() {
+			storeDetectionEventChan <- struct{}{}
+		}()
 		// 为了数据一致性，主存储也需要回滚
 		tx.Rollback()
 		if tx2 != nil {
@@ -42,7 +48,9 @@ func DoubleWrite(exec, execBackup doubleWriteFunc) error {
 }
 
 // MultiStoreInsert 多store insert
-func MultiStoreInsert[T any](ctx context.Context, m T, main, backup store.InsertFunc[T]) error {
+func MultiStoreInsert[T any](ctx context.Context, storeDetectionEventChan chan<- struct{}, m T, stores ...store.InsertFunc[T]) error {
+	main := stores[0]
+	backup := stores[1]
 	if main.GetStoreErr() != nil {
 		return otperr.ErrStore(main.GetStoreErr())
 	}
@@ -55,34 +63,63 @@ func MultiStoreInsert[T any](ctx context.Context, m T, main, backup store.Insert
 			return backup.Insert(ctx, m)
 		}
 	}
-	err := DoubleWrite(func() (store.Tx, error) {
+	err := DoubleWrite(storeDetectionEventChan, func() (store.Tx, error) {
 		return main.Insert(ctx, m)
 	}, backupExec)
+	// 其他store
+	for _, s := range stores[2:] {
+		tx, _ := s.Insert(ctx, m)
+		if tx != nil {
+			tx.Commit()
+		}
+	}
 	return err
 }
 
 // MultiStoreSelectByCondition 多store 条件查询
-func MultiStoreSelectByCondition[P any, R any](ctx context.Context, p P, stores ...store.SelectFunc[P, R]) (result []R, err error) {
+func MultiStoreSelectByCondition[P any, R any](ctx context.Context, storeDetectionEventChan chan<- struct{}, p P, stores ...store.SelectFunc[P, R]) (result []R, err error) {
+	var cacheStore store.CacheStore
 	for _, s := range stores {
 		err = storeHealthCheck(s)
 		if err != nil {
 			continue
 		}
+		isCacheStore := false
+		if x, ok := s.(store.CacheStore); ok {
+			isCacheStore = ok
+			cacheStore = x
+		} else {
+			isCacheStore = ok
+		}
 		result, err = s.SelectByCondition(ctx, p)
+		if err != nil {
+			go func() {
+				storeDetectionEventChan <- struct{}{}
+			}()
+		}
 		if err == nil && result != nil {
+			// cache中没有，存储中存在，更新cache
+			if !isCacheStore && cacheStore != nil {
+				_ = cacheStore.Refresh(ctx, p)
+			}
 			return
 		}
 	}
 	return
 }
 
-func MultiStorePaging[P any, R any](ctx context.Context, p P, stores ...store.PagingFunc[P, R]) (result []R, count int64, err error) {
+func MultiStorePaging[P any, R any](ctx context.Context, storeDetectionEventChan chan<- struct{}, p P, stores ...store.PagingFunc[P, R]) (result []R, count int64, err error) {
 	for _, s := range stores {
 		err = storeHealthCheck(s)
 		if err != nil {
 			continue
 		}
 		result, count, err = s.Paging(ctx, p)
+		if err != nil {
+			go func() {
+				storeDetectionEventChan <- struct{}{}
+			}()
+		}
 		if err == nil && result != nil {
 			return
 		}
@@ -101,7 +138,9 @@ func storeHealthCheck(f store.HealthFunc) error {
 	return nil
 }
 
-func MultiStoreUpdate(ctx context.Context, ID int64, params map[string]any, main, backup store.UpdateFunc) error {
+func MultiStoreUpdate(ctx context.Context, storeDetectionEventChan chan<- struct{}, ID int64, params map[string]any, stores ...store.UpdateFunc) error {
+	main := stores[0]
+	backup := stores[1]
 	if main.GetStoreErr() != nil {
 		return otperr.ErrStore(main.GetStoreErr())
 	}
@@ -114,8 +153,15 @@ func MultiStoreUpdate(ctx context.Context, ID int64, params map[string]any, main
 			return backup.Update(ctx, ID, params)
 		}
 	}
-	err := DoubleWrite(func() (store.Tx, error) {
+	err := DoubleWrite(storeDetectionEventChan, func() (store.Tx, error) {
 		return main.Update(ctx, ID, params)
 	}, backupExec)
+	// 其他store
+	for _, s := range stores[2:] {
+		tx, _ := s.Update(ctx, ID, params)
+		if tx != nil {
+			tx.Commit()
+		}
+	}
 	return err
 }

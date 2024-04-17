@@ -14,7 +14,6 @@ import (
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/pkg/enum"
 	"github.com/lidenger/otpserver/pkg/util"
-	"gorm.io/gorm"
 	"strings"
 )
 
@@ -84,8 +83,8 @@ var EmptyTxIns = &EmptyTx{}
 // CacheStore 缓存存储
 type CacheStore interface {
 	LoadAll(ctx context.Context) error
-	Remove(ctx context.Context, param string)
-	Refresh(ctx context.Context, param string) error
+	Remove(ctx context.Context, param any)
+	Refresh(ctx context.Context, param any) error
 }
 
 var activeStore = make([]storeconf.Status, 0)
@@ -105,19 +104,11 @@ func Initialize() {
 	isKnownStore := false
 	if util.Eqs(enum.MySQLStore, c.MainStore, c.BackupStore) {
 		mysqlconf.Initialize(conf)
-		err := mysqlconf.MySQLConfIns.TestStore()
-		if err != nil {
-			log.Error("MySQL检测不通过，err:%s", err.Error())
-		}
 		activeStore = append(activeStore, mysqlconf.MySQLConfIns)
 		isKnownStore = true
 	}
 	if util.Eqs(enum.PostGreSQLStore, c.MainStore, c.BackupStore) {
 		pgsqlconf.Initialize(conf)
-		err := pgsqlconf.PgSQLConfIns.TestStore()
-		if err != nil {
-			log.Error("PostgreSQL检测不通过，err:%s", err.Error())
-		}
 		activeStore = append(activeStore, pgsqlconf.PgSQLConfIns)
 		isKnownStore = true
 	}
@@ -134,12 +125,12 @@ func Initialize() {
 	}
 	log.Info("%s", builder.String())
 	// 启用本地存储
-	if conf.Server.IsEnableLocalStore {
+	if conf.Store.IsEnableLocal {
 		localconf.Initialize(conf)
 		activeStore = append(activeStore, localconf.LocalConfIns)
 	}
 	// 启用memory存储
-	if conf.Server.IsEnableMemoryStore {
+	if conf.Store.IsEnableMemory {
 		memoryconf.Initialize(conf)
 		activeStore = append(activeStore, memoryconf.MemoryConfIns)
 	}
@@ -148,13 +139,4 @@ func Initialize() {
 // GetAllActiveStore 获取所有启用的store
 func GetAllActiveStore() []storeconf.Status {
 	return activeStore
-}
-
-// ConfigPagingParam 设置db分页参数
-func ConfigPagingParam(pageNo, pageSize int, db *gorm.DB) *gorm.DB {
-	if pageNo != 0 && pageSize != 0 {
-		offset := (pageNo - 1) * pageSize
-		db = db.Offset(offset).Limit(pageSize)
-	}
-	return db
 }

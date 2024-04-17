@@ -8,8 +8,6 @@ type M struct {
 		ReqLimit             int    `toml:"reqLimit"`
 		AccessTokenValidHour int    `toml:"accessTokenValidHour"`
 		TimeTokenValidMinute int    `toml:"timeTokenValidMinute"`
-		IsEnableLocalStore   bool   `toml:"isEnableLocalStore"`
-		IsEnableMemoryStore  bool   `toml:"isEnableMemoryStore"`
 	} `toml:"server"`
 	Log struct {
 		Level      string `toml:"level"`
@@ -22,8 +20,10 @@ type M struct {
 		Compress   bool   `toml:"compress"`
 	} `toml:"log"`
 	Store struct {
-		MainStore   string `toml:"mainStore"`
-		BackupStore string `toml:"backupStore"`
+		MainStore      string `toml:"mainStore"`
+		BackupStore    string `toml:"backupStore"`
+		IsEnableLocal  bool   `toml:"isEnableLocal"`
+		IsEnableMemory bool   `toml:"isEnableMemory"`
 	} `toml:"store"`
 	MySQL struct {
 		Address         string `toml:"address"`

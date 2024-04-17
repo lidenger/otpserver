@@ -15,9 +15,10 @@ import (
 )
 
 type SecretSvc struct {
-	Store       store.SecretStore // 主存储
-	StoreBackup store.SecretStore // 备存储
-	StoreMemory store.SecretStore // 内存存储
+	Store                   store.SecretStore // 主存储
+	StoreBackup             store.SecretStore // 备存储
+	StoreMemory             store.SecretStore // 内存存储
+	storeDetectionEventChan chan<- struct{}
 }
 
 // Add 添加账号密钥
@@ -35,7 +36,7 @@ func (s *SecretSvc) Add(ctx context.Context, account string, isEnable uint8) err
 	if err != nil {
 		return err
 	}
-	err = MultiStoreInsert[*model.AccountSecretModel](ctx, m, s.Store, s.StoreBackup)
+	err = MultiStoreInsert[*model.AccountSecretModel](ctx, s.storeDetectionEventChan, m, s.Store, s.StoreBackup, s.StoreMemory)
 	return err
 }
 
@@ -80,7 +81,7 @@ func (s *SecretSvc) IsExists(ctx context.Context, account string) (bool, error) 
 func (s *SecretSvc) GetByAccount(ctx context.Context, account string, isDecrypt bool) (*model.AccountSecretModel, error) {
 	var err error
 	p := &param.SecretParam{Account: account}
-	data, err := MultiStoreSelectByCondition[*param.SecretParam, *model.AccountSecretModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup)
+	data, err := MultiStoreSelectByCondition[*param.SecretParam, *model.AccountSecretModel](ctx, s.storeDetectionEventChan, p, s.StoreMemory, s.Store, s.StoreBackup)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +121,7 @@ func (s *SecretSvc) CalcDataCheckSum(isEnable uint8, account, secretSeedCipher s
 
 // Paging 分页
 func (s *SecretSvc) Paging(ctx context.Context, p *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
-	result, count, err = MultiStorePaging[*param.SecretPagingParam, *model.AccountSecretModel](ctx, p, s.Store, s.StoreBackup)
+	result, count, err = MultiStorePaging[*param.SecretPagingParam, *model.AccountSecretModel](ctx, s.storeDetectionEventChan, p, s.Store, s.StoreBackup)
 	return
 }
 
@@ -140,6 +141,6 @@ func (s *SecretSvc) SetEnable(ctx context.Context, account string, isEnable uint
 	params := make(map[string]any)
 	params["is_enable"] = isEnable
 	params["data_check"] = checkSum
-	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
+	err = MultiStoreUpdate(ctx, s.storeDetectionEventChan, m.ID, params, s.Store, s.StoreBackup, s.StoreMemory)
 	return err
 }

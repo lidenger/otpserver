@@ -14,9 +14,10 @@ import (
 )
 
 type ServerSvc struct {
-	Store       store.ServerStore // 主存储
-	StoreBackup store.ServerStore // 备存储
-	StoreMemory store.ServerStore // 内存存储
+	Store                   store.ServerStore // 主存储
+	StoreBackup             store.ServerStore // 备存储
+	StoreMemory             store.ServerStore // 内存存储
+	storeDetectionEventChan chan<- struct{}
 }
 
 // Add 增加接入的服务
@@ -33,7 +34,7 @@ func (s *ServerSvc) Add(ctx context.Context, p *param.ServerParam) error {
 	if err != nil {
 		return err
 	}
-	err = MultiStoreInsert[*model.ServerModel](ctx, m, s.Store, s.StoreBackup)
+	err = MultiStoreInsert[*model.ServerModel](ctx, s.storeDetectionEventChan, m, s.Store, s.StoreBackup)
 	return err
 }
 
@@ -90,7 +91,7 @@ func (s *ServerSvc) IsExists(ctx context.Context, sign string) (bool, error) {
 func (s *ServerSvc) GetBySign(ctx context.Context, sign string, isDecrypt bool) (*model.ServerModel, error) {
 	var err error
 	p := &param.ServerParam{Sign: sign}
-	data, err := MultiStoreSelectByCondition[*param.ServerParam, *model.ServerModel](ctx, p, s.StoreMemory, s.Store, s.StoreBackup)
+	data, err := MultiStoreSelectByCondition[*param.ServerParam, *model.ServerModel](ctx, s.storeDetectionEventChan, p, s.StoreMemory, s.Store, s.StoreBackup)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func (s *ServerSvc) CheckModel(m *model.ServerModel, isDecrypt bool) error {
 
 // Paging 分页
 func (s *ServerSvc) Paging(ctx context.Context, p *param.ServerPagingParam) (result []*model.ServerModel, count int64, err error) {
-	result, count, err = MultiStorePaging[*param.ServerPagingParam, *model.ServerModel](ctx, p, s.Store, s.StoreBackup)
+	result, count, err = MultiStorePaging[*param.ServerPagingParam, *model.ServerModel](ctx, s.storeDetectionEventChan, p, s.Store, s.StoreBackup)
 	return
 }
 
@@ -160,7 +161,7 @@ func (s *ServerSvc) SetEnable(ctx context.Context, p *param.ServerParam) error {
 	params["is_enable"] = m.IsEnable
 	params["is_operate_sensitive_data"] = m.IsOperateSensitiveData
 	params["data_check"] = checkSum
-	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
+	err = MultiStoreUpdate(ctx, s.storeDetectionEventChan, m.ID, params, s.Store, s.StoreBackup)
 	return err
 }
 
@@ -187,6 +188,6 @@ func (s *ServerSvc) EditBase(ctx context.Context, p *param.ServerParam) error {
 	if len(p.Remark) != 0 {
 		params["server_remark"] = p.Remark
 	}
-	err = MultiStoreUpdate(ctx, m.ID, params, s.Store, s.StoreBackup)
+	err = MultiStoreUpdate(ctx, s.storeDetectionEventChan, m.ID, params, s.Store, s.StoreBackup)
 	return err
 }

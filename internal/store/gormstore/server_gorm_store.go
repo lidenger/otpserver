@@ -25,7 +25,7 @@ func ServerUpdate(ctx context.Context, DB *gorm.DB, ID int64, params map[string]
 }
 
 func ServerPaging(ctx context.Context, DB *gorm.DB, param *param.ServerPagingParam) (result []*model.ServerModel, count int64, err error) {
-	db := store.ConfigPagingParam(param.PageNo, param.PageSize, DB)
+	db := ConfigPagingParam(param.PageNo, param.PageSize, DB)
 	if param.SearchTxt != "" {
 		if param.SearchTxt == "启用" {
 			db = db.Where("is_enable = 1")
