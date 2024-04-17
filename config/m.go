@@ -22,6 +22,7 @@ type M struct {
 	Store struct {
 		MainStore      string `toml:"mainStore"`
 		BackupStore    string `toml:"backupStore"`
+		RootPath       string `toml:"rootPath"`
 		IsEnableLocal  bool   `toml:"isEnableLocal"`
 		IsEnableMemory bool   `toml:"isEnableMemory"`
 	} `toml:"store"`

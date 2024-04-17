@@ -16,6 +16,12 @@ var HttpZapLogger *zap.Logger
 
 func Initialize() {
 	conf := serverconf.GetSysConf()
+	// 初始化日志目录
+	dirPath := conf.Server.RootPath + conf.Log.RootPath
+	err := os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
 	level, err := zap.ParseAtomicLevel(conf.Log.Level)
 	if err != nil {
 		panic(fmt.Sprintf("日志Level设置错误:%+v", err))
@@ -33,7 +39,7 @@ func Initialize() {
 	zapLogger = zap.New(core, caller, development)
 	// 初始化http请求日志
 	initHttpLog(conf)
-	Info("日志配置完成,日志文件:%s", conf.Log.RootPath+conf.Log.AppFile)
+	Info("日志配置完成,日志文件:%s", conf.Server.RootPath+conf.Log.RootPath+conf.Log.AppFile)
 }
 
 func Info(template string, args ...any) {
@@ -63,7 +69,7 @@ func Error(template string, args ...any) {
 // rotatedConf 日志翻滚切割配置
 func rotatedConf(conf *config.M) *lumberjack.Logger {
 	rotatedWriter := &lumberjack.Logger{
-		Filename:   conf.Log.RootPath + conf.Log.AppFile,
+		Filename:   conf.Server.RootPath + conf.Log.RootPath + conf.Log.AppFile,
 		MaxSize:    conf.Log.MaxSize,
 		MaxBackups: conf.Log.MaxBackups,
 		MaxAge:     conf.Log.MaxAge,
@@ -99,7 +105,7 @@ func initHttpLog(conf *config.M) {
 // httpRotatedConf 日志翻滚切割配置
 func httpRotatedConf(conf *config.M) *lumberjack.Logger {
 	rotatedWriter := &lumberjack.Logger{
-		Filename:   conf.Log.RootPath + conf.Log.HttpFile,
+		Filename:   conf.Server.RootPath + conf.Log.RootPath + conf.Log.HttpFile,
 		MaxSize:    conf.Log.MaxSize,
 		MaxBackups: conf.Log.MaxBackups,
 		MaxAge:     conf.Log.MaxAge,

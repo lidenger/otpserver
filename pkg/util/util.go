@@ -2,6 +2,7 @@ package util
 
 import (
 	"github.com/google/uuid"
+	"os"
 	"strings"
 )
 
@@ -41,4 +42,16 @@ func Eqs(target string, params ...string) bool {
 		}
 	}
 	return false
+}
+
+func IsExistsFile(filePath string) (bool, error) {
+	_, err := os.Stat(filePath)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return true, nil
+	} else {
+		return false, err
+	}
 }
