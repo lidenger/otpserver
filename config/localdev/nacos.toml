@@ -3,8 +3,8 @@ namespaceId = ""
 dataId = "otpserverv1"
 group = "DEFAULT_GROUP"
 timeoutMs = 5000
-logDir = "/nacos/log"
-cacheDir = "/nacos/cache"
+logDir = "/nacos/log/"
+cacheDir = "/nacos/cache/"
 logLevel = "info"
 isListenChange = true
 ## server1
