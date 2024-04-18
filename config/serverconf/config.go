@@ -28,9 +28,6 @@ func InitConfig() *config.M {
 	if err != nil {
 		panic(fmt.Sprintf("加载配置文件[app.toml]失败:%+v", err))
 	}
-	reValue := reflect.ValueOf(conf).Elem()
-	reType := reflect.TypeOf(conf).Elem()
-	recursionDecrypt(reType, reValue, "")
 	return conf
 }
 
@@ -96,6 +93,9 @@ func LoadConfigByConfSource() *config.M {
 	default:
 		panic(fmt.Sprintf("未知的配置来源:%s", cmd.P.ConfSource))
 	}
+	reValue := reflect.ValueOf(conf).Elem()
+	reType := reflect.TypeOf(conf).Elem()
+	recursionDecrypt(reType, reValue, "")
 	return conf
 }
 
