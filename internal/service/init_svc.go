@@ -19,7 +19,7 @@ var ServerSvcIns = &ServerSvc{}
 
 // store type | healthFunc
 var svcStoreStatusMap = make(map[string][]store.HealthFunc)
-var cacheStoreArr = make([]store.CacheStore, 0)
+var loadAllStoreArr = make([]store.LoadAllFunc, 0)
 
 func Initialize(storeDetectionEventChan chan<- struct{}) {
 	conf := serverconf.GetSysConf()
@@ -33,8 +33,9 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 	pgsqlSecretStore := &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
 	pgsqlServerStore := &pgsqlstore.ServerStore{DB: pgsqlconf.DB}
 
-	localSecretStore := &localstore.SecretStore{}
-	localServerStore := &localstore.ServerStore{}
+	localStoreRootPath := conf.Server.RootPath + conf.Store.RootPath
+	localSecretStore := &localstore.SecretStore{RootPath: localStoreRootPath}
+	localServerStore := &localstore.ServerStore{RootPath: localStoreRootPath}
 
 	memoryDependSecretStoreArr := make([]store.SecretStore, 0)
 	memoryDependServerStoreArr := make([]store.ServerStore, 0)
@@ -43,10 +44,12 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 	case enum.MySQLStore:
 		SecretSvcIns.Store = mysqlSecretStore
 		ServerSvcIns.Store = mysqlServerStore
+		localSecretStore.Store = mysqlSecretStore
 		addSvcStore(enum.MySQLStore, SecretSvcIns.Store, ServerSvcIns.Store)
 	case enum.PostGreSQLStore:
 		SecretSvcIns.Store = pgsqlSecretStore
 		ServerSvcIns.Store = pgsqlServerStore
+		localSecretStore.Store = pgsqlSecretStore
 		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store, ServerSvcIns.Store)
 	}
 
@@ -67,6 +70,8 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 	if conf.Store.IsEnableLocal {
 		memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, localSecretStore)
 		memoryDependServerStoreArr = append(memoryDependServerStoreArr, localServerStore)
+
+		loadAllStoreArr = append(loadAllStoreArr, localSecretStore, localServerStore)
 	}
 
 	if conf.Store.IsEnableMemory {
@@ -75,14 +80,14 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 			StoreDetectionEventChan: storeDetectionEventChan,
 		}
 		SecretSvcIns.StoreMemory = secretMemory
-		cacheStoreArr = append(cacheStoreArr, secretMemory)
 
 		serverMemory := &memorystore.ServerStore{
 			Stores:                  memoryDependServerStoreArr,
 			StoreDetectionEventChan: storeDetectionEventChan,
 		}
 		ServerSvcIns.StoreMemory = serverMemory
-		cacheStoreArr = append(cacheStoreArr, serverMemory)
+
+		loadAllStoreArr = append(loadAllStoreArr, secretMemory, serverMemory)
 
 		addSvcStore(enum.MemoryStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory)
 	}
@@ -90,13 +95,20 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc")
 }
 
-func LoadAllCacheData() {
-	for _, cache := range cacheStoreArr {
-		err := cache.LoadAll(context.Background())
-		if err != nil {
-			log.Error("memory存储获取所有数据异常:%s", err.Error())
+func LoadAllData() {
+	for _, cache := range loadAllStoreArr {
+		_ = cache.LoadAll(context.Background())
+	}
+}
+
+func FetchLocalStore() []store.LoadAllFunc {
+	ss := make([]store.LoadAllFunc, 0)
+	for _, s := range loadAllStoreArr {
+		if s.GetStoreType() == enum.LocalStore {
+			ss = append(ss, s)
 		}
 	}
+	return ss
 }
 
 func addSvcStore(typ string, funcs ...store.HealthFunc) {
@@ -108,8 +120,8 @@ func addSvcStore(typ string, funcs ...store.HealthFunc) {
 	svcStoreStatusMap[typ] = fs
 }
 
-// GetSvcStores 通过类型svc store
-func GetSvcStores(typ string) []store.HealthFunc {
+// FetchSvcStores 通过类型获取svc store
+func FetchSvcStores(typ string) []store.HealthFunc {
 	fs := svcStoreStatusMap[typ]
 	return fs
 }

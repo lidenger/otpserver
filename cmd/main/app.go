@@ -41,7 +41,20 @@ func main() {
 	store.Initialize()
 	service.Initialize(detectionStoreEventChan)
 	timer.TriggerDetectionStore()
-	service.LoadAllCacheData()
+	service.LoadAllData()
+
+	/*	for _, allFunc := range service.FetchLocalStore() {
+		if secretStore, ok := allFunc.(store.LocalStore[*model.AccountSecretModel]); ok {
+			ds, err := secretStore.FetchAll(context.Background())
+			if err != nil {
+				fmt.Println(err)
+			}
+			for _, d := range ds {
+				fmt.Printf("%+v\n", d)
+			}
+		}
+	}*/
+
 	g := router.Initialize()
 	httpPort := serverconf.GetSysConf().Server.Port
 	server := &http.Server{
@@ -57,6 +70,8 @@ func main() {
 	log.Info("Http服务已启动,端口:%d", httpPort)
 	// 启动store定期检测
 	timer.StartStoreHealthCheckTicker(detectionStoreEventChan)
+	// 启用local store定期备份
+	timer.StartLocalStoreCheckTicker()
 	// 监听退出信号
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -77,6 +92,8 @@ func main() {
 func closeRes() {
 	// 关闭store定期检测
 	timer.StopStoreHealthCheckTicker()
+	// 关闭local store定期备份
+	timer.StopLocalStoreCheckTicker()
 	// 关闭所有激活的store
 	storeArr := store.GetAllActiveStore()
 	for _, s := range storeArr {

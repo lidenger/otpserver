@@ -42,7 +42,7 @@ func testStore(s storeconf.Status) {
 		log.Error(s.GetStoreType()+"存储检测异常:%s", err.Error())
 		// TODO 发送存储异常报警消息
 	}
-	svcStores := service.GetSvcStores(s.GetStoreType())
+	svcStores := service.FetchSvcStores(s.GetStoreType())
 	for _, svcStore := range svcStores {
 		svcStore.SetStoreErr(err)
 	}

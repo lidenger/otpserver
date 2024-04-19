@@ -61,6 +61,11 @@ func ServerSelectByCondition(ctx context.Context, DB *gorm.DB, condition *param.
 	return
 }
 
+func ServerSelectAll(_ context.Context, DB *gorm.DB) (result []*model.ServerModel, err error) {
+	err = DB.Order("update_time desc").Find(&result).Error
+	return
+}
+
 func ServerSelectById(ctx context.Context, DB *gorm.DB, ID int64) (result *model.ServerModel, err error) {
 	err = DB.First(&result, "id = ?", ID).Error
 	return

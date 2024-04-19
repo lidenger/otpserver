@@ -6,6 +6,7 @@ import (
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/internal/store/gormstore"
+	"github.com/lidenger/otpserver/pkg/enum"
 	"gorm.io/gorm"
 )
 
@@ -25,6 +26,10 @@ func (s *SecretStore) SetStoreErr(err error) {
 	s.err = err
 }
 
+func (s *SecretStore) GetStoreType() string {
+	return enum.MySQLStore
+}
+
 func (s *SecretStore) GetDB() *gorm.DB {
 	return s.DB
 }
@@ -39,6 +44,10 @@ func (s *SecretStore) Update(ctx context.Context, ID int64, params map[string]an
 
 func (s *SecretStore) Paging(ctx context.Context, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
 	return gormstore.SecretPaging(ctx, s.DB, param)
+}
+
+func (s *SecretStore) SelectAll(ctx context.Context) ([]*model.AccountSecretModel, error) {
+	return gormstore.SecretSelectAll(ctx, s.DB)
 }
 
 func (s *SecretStore) SelectById(ctx context.Context, ID int64) (*model.AccountSecretModel, error) {

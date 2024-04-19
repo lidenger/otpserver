@@ -21,6 +21,7 @@ import (
 type HealthFunc interface {
 	GetStoreErr() error
 	SetStoreErr(error)
+	GetStoreType() string
 }
 
 type InsertFunc[T any] interface {
@@ -43,8 +44,13 @@ type PagingFunc[P any, R any] interface {
 	Paging(ctx context.Context, param P) (result []R, count int64, err error)
 }
 
+type SelectAllFunc[R any] interface {
+	SelectAll(ctx context.Context) (result []R, err error)
+}
+
 type SelectFunc[P any, R any] interface {
 	HealthFunc
+	SelectAllFunc[R]
 	SelectByCondition(ctx context.Context, condition P) (result []R, err error)
 	SelectById(ctx context.Context, ID int64) (R, error)
 }
@@ -80,11 +86,22 @@ func (e *EmptyTx) Rollback() {}
 
 var EmptyTxIns = &EmptyTx{}
 
+type LoadAllFunc interface {
+	GetStoreType() string
+	LoadAll(ctx context.Context) error
+}
+
 // CacheStore 缓存存储
 type CacheStore interface {
-	LoadAll(ctx context.Context) error
+	LoadAllFunc
 	Remove(ctx context.Context, param any)
 	Refresh(ctx context.Context, param any) error
+}
+
+// LocalStore 本地存储
+type LocalStore[M any] interface {
+	LoadAllFunc
+	FetchAll(ctx context.Context) ([]M, error)
 }
 
 var activeStore = make([]storeconf.Status, 0)

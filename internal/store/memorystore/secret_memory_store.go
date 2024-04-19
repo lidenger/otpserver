@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"github.com/jinzhu/copier"
+	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
+	"github.com/lidenger/otpserver/pkg/enum"
 	"github.com/lidenger/otpserver/pkg/otperr"
 	"github.com/lidenger/otpserver/pkg/util"
+	"strconv"
 	"time"
 )
 
@@ -33,6 +36,10 @@ func (s *SecretStore) SetStoreErr(err error) {
 	s.err = err
 }
 
+func (s *SecretStore) GetStoreType() string {
+	return enum.MemoryStore
+}
+
 func (s *SecretStore) getAvailableStore() store.SecretStore {
 	for _, st := range s.Stores {
 		if st.GetStoreErr() == nil {
@@ -46,13 +53,16 @@ func (s *SecretStore) LoadAll(ctx context.Context) error {
 	p := &param.SecretPagingParam{}
 	p.PageNo = 1
 	p.PageSize = 100
+	secretStore := s.getAvailableStore()
 	for {
-		data, _, err := s.getAvailableStore().Paging(ctx, p)
+		secretStore = s.getAvailableStore()
+		data, _, err := secretStore.Paging(ctx, p)
 		// 查询异常做一次store的检测，重新查询一次
 		if err != nil {
 			s.StoreDetectionEventChan <- struct{}{}
 			time.Sleep(3 * time.Second)
-			data, _, err = s.getAvailableStore().Paging(ctx, p)
+			secretStore = s.getAvailableStore()
+			data, _, err = secretStore.Paging(ctx, p)
 		}
 		if err != nil {
 			return err
@@ -66,6 +76,7 @@ func (s *SecretStore) LoadAll(ctx context.Context) error {
 		}
 		p.PageNo++
 	}
+	log.Info("Memory从[" + secretStore.GetStoreType() + "]存储中获取数据成功，总数: " + strconv.Itoa(len(secretCacheMap)))
 	return nil
 }
 
@@ -162,6 +173,14 @@ func (s *SecretStore) SelectByCondition(_ context.Context, condition *param.Secr
 		return nil, err
 	}
 	result = append(result, m2)
+	return result, nil
+}
+
+func (s *SecretStore) SelectAll(ctx context.Context) ([]*model.AccountSecretModel, error) {
+	result := make([]*model.AccountSecretModel, 0)
+	for _, m := range secretCacheMap {
+		result = append(result, m)
+	}
 	return result, nil
 }
 

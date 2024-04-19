@@ -48,7 +48,7 @@ func SecretSelectById(ctx context.Context, DB *gorm.DB, ID int64) (result *model
 	return
 }
 
-func SecretSelectByCondition(ctx context.Context, DB *gorm.DB, condition *param.SecretParam) (result []*model.AccountSecretModel, err error) {
+func SecretSelectByCondition(_ context.Context, DB *gorm.DB, condition *param.SecretParam) (result []*model.AccountSecretModel, err error) {
 	db := DB
 	if condition.ID != 0 {
 		db = db.Where("ID = ?", condition.ID)
@@ -60,6 +60,11 @@ func SecretSelectByCondition(ctx context.Context, DB *gorm.DB, condition *param.
 		db = db.Where("account = ?", condition.Account)
 	}
 	err = db.Order("update_time desc").Find(&result).Error
+	return
+}
+
+func SecretSelectAll(_ context.Context, DB *gorm.DB) (result []*model.AccountSecretModel, err error) {
+	err = DB.Order("update_time desc").Find(&result).Error
 	return
 }
 
