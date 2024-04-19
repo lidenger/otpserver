@@ -56,3 +56,11 @@ func TestGenerate32Str(t *testing.T) {
 		t.Fatal()
 	}
 }
+
+func TestIsNotExistsFile(t *testing.T) {
+	s, err := IsNotExistsFile("G:/otpserver/store/test_file_store.txt")
+	if err != nil {
+		t.Fatal()
+	}
+	t.Log(s)
+}

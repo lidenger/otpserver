@@ -45,9 +45,14 @@ func Eqs(target string, params ...string) bool {
 }
 
 func IsExistsFile(filePath string) (bool, error) {
+	notExist, err := IsNotExistsFile(filePath)
+	return !notExist, err
+}
+
+func IsNotExistsFile(filePath string) (bool, error) {
 	_, err := os.Stat(filePath)
 	if err == nil {
-		return true, nil
+		return false, nil
 	}
 	if os.IsNotExist(err) {
 		return true, nil

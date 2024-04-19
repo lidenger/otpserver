@@ -40,7 +40,7 @@ var P *Param
 func InitParam() {
 	P = &Param{}
 	flag.BoolVar(&P.IsInitMode, "init", false, "系统初始化")
-	flag.StringVar(&P.ConfSource, "confSource", "nacos", "配置来源[nacos,local,default]")
+	flag.StringVar(&P.ConfSource, "confSource", "default", "配置来源[nacos,local,default]")
 	flag.StringVar(&P.ConfFile, "confFile", "", "配置文件")
 	flag.BoolVar(&P.IsToolMode, "tool", false, "工具模式")
 	flag.BoolVar(&P.Encrypt, "encrypt", false, "工具模式-加密")
