@@ -6,6 +6,7 @@ import (
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/internal/store/gormstore"
+	"github.com/lidenger/otpserver/pkg/enum"
 	"gorm.io/gorm"
 )
 
@@ -23,6 +24,10 @@ func (s *SecretStore) GetStoreErr() error {
 
 func (s *SecretStore) SetStoreErr(err error) {
 	s.err = err
+}
+
+func (s *SecretStore) GetStoreType() string {
+	return enum.PostGreSQLStore
 }
 
 func (s *SecretStore) GetDB() *gorm.DB {
@@ -47,6 +52,10 @@ func (s *SecretStore) SelectById(ctx context.Context, ID int64) (*model.AccountS
 
 func (s *SecretStore) SelectByCondition(ctx context.Context, condition *param.SecretParam) (result []*model.AccountSecretModel, err error) {
 	return gormstore.SecretSelectByCondition(ctx, s.DB, condition)
+}
+
+func (s *SecretStore) SelectAll(ctx context.Context) ([]*model.AccountSecretModel, error) {
+	return gormstore.SecretSelectAll(ctx, s.DB)
 }
 
 func (s *SecretStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {

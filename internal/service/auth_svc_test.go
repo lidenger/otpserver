@@ -27,6 +27,12 @@ func initP() {
 	cmd.P.Crypt = crypto
 }
 
+func initPFromLocalAppKeyFile() {
+	crypto := cmd.AnalysisKeyFile("H:/lidenger/otpserver/app.key")
+	cmd.P = &cmd.Param{}
+	cmd.P.Crypt = crypto
+}
+
 func TestGenTimeToken(t *testing.T) {
 	key192 = []byte("74137809f09b11eeb9fe2cf05daf3fe5")
 	iv = []byte("74154b1ef09b11ee")
@@ -38,7 +44,7 @@ func TestGenTimeToken(t *testing.T) {
 }
 
 func TestGenAccessToken(t *testing.T) {
-	initP()
+	initPFromLocalAppKeyFile()
 	token, m, err := GenAccessToken("server1")
 	if err != nil {
 		t.Fatal(err)
@@ -48,8 +54,8 @@ func TestGenAccessToken(t *testing.T) {
 }
 
 func TestAnalysisAccessToken(t *testing.T) {
-	initP()
-	token := "94fc900c4369fba3735be9a06648c781af8d246a10fb3ddf38e3d6da7eaa3326f4a32cdf9be8a978404f33db890fd083a7318098b8f2a1792cafa6b227ba9400f98b7a4c5500c0344240c8e945e07fb5"
+	initPFromLocalAppKeyFile()
+	token := "2edefa52af1e848c56a2749d25c653ac6dd55ec5748b259bf66c39b5f0cda70e5cb95d3b27a161a14efc1b5ddd265a88cd367927365aa6a78b2ccb48dcaee2c3ec4d0ad56cfb01ae3acffbf4acfad4e1"
 	m, err := AnalysisAccessToken(token)
 	if err != nil {
 		t.Fatal(err)

@@ -7,6 +7,7 @@ import (
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
+	"github.com/lidenger/otpserver/pkg/enum"
 	"github.com/lidenger/otpserver/pkg/otperr"
 	"github.com/lidenger/otpserver/pkg/util"
 	"time"
@@ -31,6 +32,10 @@ func (s *ServerStore) GetStoreErr() error {
 
 func (s *ServerStore) SetStoreErr(err error) {
 	s.err = err
+}
+
+func (s *ServerStore) GetStoreType() string {
+	return enum.MemoryStore
 }
 
 func (s *ServerStore) getAvailableStore() store.ServerStore {
@@ -160,6 +165,14 @@ func (s *ServerStore) SelectByCondition(_ context.Context, condition *param.Serv
 		return nil, err
 	}
 	result = append(result, m2)
+	return result, nil
+}
+
+func (s *ServerStore) SelectAll(ctx context.Context) ([]*model.ServerModel, error) {
+	result := make([]*model.ServerModel, 0)
+	for _, m := range serverCacheMap {
+		result = append(result, m)
+	}
 	return result, nil
 }
 
