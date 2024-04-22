@@ -14,7 +14,9 @@ func StartLocalStoreCheckTicker() {
 		for range localStoreCheckTicker.C {
 			for _, ls := range service.FetchLocalStore() {
 				err := ls.LoadAll(context.Background())
-				log.Error(err.Error())
+				if err != nil {
+					log.Error(err.Error())
+				}
 			}
 		}
 	}()

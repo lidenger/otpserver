@@ -16,7 +16,7 @@ var DB *gorm.DB
 type MySQLConf struct {
 }
 
-var MySQLConfIns = &MySQLConf{}
+var Ins = &MySQLConf{}
 
 func Initialize(conf *config.M) *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local&timeout=%s",

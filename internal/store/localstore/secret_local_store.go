@@ -42,42 +42,7 @@ func (s *SecretStore) LoadAll(ctx context.Context) error {
 		log.Error("账号密钥主存储异常，无法从主存储加载数据到本地存储，使用上个版本的本地存储数据")
 		return s.Store.GetStoreErr()
 	}
-	filePath := filepath.Join(s.RootPath, SecretFileName)
-	err = manageLocalStoreFile(filePath)
-	if err != nil {
-		return err
-	}
-	p := &param.SecretPagingParam{}
-	p.PageNo = 1
-	p.PageSize = 100
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	secretArr := make([]*model.AccountSecretModel, 0)
-	for {
-		data, _, err := s.Store.Paging(ctx, p)
-		if err != nil {
-			return err
-		}
-		// 获取了所有数据
-		if len(data) == 0 {
-			break
-		}
-		for _, m := range data {
-			secretArr = append(secretArr, m)
-		}
-		p.PageNo++
-	}
-	js, err := json.Marshal(secretArr)
-	if err != nil {
-		return err
-	}
-	_, err = file.Write(js)
-	if err != nil {
-		return err
-	}
+	err = fetchAllStoreDataAndWriteToFile[*model.AccountSecretModel](ctx, s.Store, s.RootPath, SecretFileName)
 	return nil
 }
 
