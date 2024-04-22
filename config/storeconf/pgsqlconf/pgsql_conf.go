@@ -16,7 +16,7 @@ var DB *gorm.DB
 type PgSQLConf struct {
 }
 
-var PgSQLConfIns = &PgSQLConf{}
+var Ins = &PgSQLConf{}
 
 // Initialize https://github.com/go-gorm/postgres
 func Initialize(conf *config.M) *gorm.DB {

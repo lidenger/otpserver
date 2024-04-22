@@ -2,14 +2,11 @@ package localstore
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/enum"
-	"os"
-	"path/filepath"
 )
 
 type ServerStore struct {
@@ -42,42 +39,7 @@ func (s *ServerStore) LoadAll(ctx context.Context) error {
 		log.Error("接入服务主存储异常，无法从主存储加载数据到本地存储，使用上个版本的本地存储数据")
 		return s.Store.GetStoreErr()
 	}
-	filePath := filepath.Join(s.RootPath, ServerFileName)
-	err = manageLocalStoreFile(filePath)
-	if err != nil {
-		return err
-	}
-	p := &param.ServerPagingParam{}
-	p.PageNo = 1
-	p.PageSize = 100
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	secretArr := make([]*model.ServerModel, 0)
-	for {
-		data, _, err := s.Store.Paging(ctx, p)
-		if err != nil {
-			return err
-		}
-		// 获取了所有数据
-		if len(data) == 0 {
-			break
-		}
-		for _, m := range data {
-			secretArr = append(secretArr, m)
-		}
-		p.PageNo++
-	}
-	js, err := json.Marshal(secretArr)
-	if err != nil {
-		return err
-	}
-	_, err = file.Write(js)
-	if err != nil {
-		return err
-	}
+	err = fetchAllStoreDataAndWriteToFile[*model.ServerModel](ctx, s.Store, s.RootPath, ServerFileName)
 	return nil
 }
 

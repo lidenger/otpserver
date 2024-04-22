@@ -7,6 +7,8 @@ import (
 	"github.com/lidenger/otpserver/pkg/enum"
 	"github.com/lidenger/otpserver/pkg/util"
 	"os"
+	"path"
+	"path/filepath"
 	"time"
 )
 
@@ -14,22 +16,28 @@ type LocalConf struct {
 	testFilePath string
 }
 
-var LocalConfIns = &LocalConf{}
+var Ins = &LocalConf{}
 
 func Initialize(conf *config.M) {
 	// 初始化local store目录
-	dirPath := conf.Server.RootPath + conf.Store.RootPath
+	dirPath := path.Join(conf.Server.RootPath, conf.Store.RootPath)
 	err := os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
-	LocalConfIns.testFilePath = dirPath + "test_file_store.txt"
-	isNotExist, err := util.IsNotExistsFile(LocalConfIns.testFilePath)
+	// 初始化 local store bak 目录
+	bakDirPath := path.Join(conf.Server.RootPath, conf.Store.RootPath, "/bak")
+	err = os.MkdirAll(bakDirPath, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	Ins.testFilePath = filepath.Join(dirPath, "test_file_store")
+	isNotExist, err := util.IsNotExistsFile(Ins.testFilePath)
 	if err != nil {
 		panic(err)
 	}
 	if isNotExist {
-		f, err := os.Create(LocalConfIns.testFilePath)
+		f, err := os.Create(Ins.testFilePath)
 		if err != nil {
 			panic(err)
 		}
@@ -45,6 +53,7 @@ func (l *LocalConf) CloseStore() {
 	log.Info("本地存储已关闭")
 }
 
+// TestStore 检测文件存储是否正常，通过写入当前时间来做判断
 func (l *LocalConf) TestStore() error {
 	content := fmt.Sprintf("Local store检测时间: " + time.Now().Format(time.DateTime) + "\n")
 	isExist, err := util.IsExistsFile(l.testFilePath)

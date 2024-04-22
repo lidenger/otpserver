@@ -43,18 +43,6 @@ func main() {
 	timer.TriggerDetectionStore()
 	service.LoadAllData()
 
-	/*	for _, allFunc := range service.FetchLocalStore() {
-		if secretStore, ok := allFunc.(store.LocalStore[*model.AccountSecretModel]); ok {
-			ds, err := secretStore.FetchAll(context.Background())
-			if err != nil {
-				fmt.Println(err)
-			}
-			for _, d := range ds {
-				fmt.Printf("%+v\n", d)
-			}
-		}
-	}*/
-
 	g := router.Initialize()
 	httpPort := serverconf.GetSysConf().Server.Port
 	server := &http.Server{

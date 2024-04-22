@@ -6,24 +6,27 @@ import (
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/util"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 // local store 文件处理
-func manageLocalStoreFile(filepath string) error {
-	isExists, err := util.IsExistsFile(filepath)
+func manageLocalStoreFile(rootPath, fileName string) error {
+	fullPath := filepath.Join(rootPath, fileName)
+	isExists, err := util.IsExistsFile(fullPath)
 	if err != nil {
 		return err
 	}
 	if isExists {
 		// 重命名 -> bak
 		timestamp := time.Now().Format("20060102150405")
-		err = os.Rename(filepath, filepath+"_bak_"+timestamp)
+		bakPath := filepath.Join(rootPath, "/bak", fileName+"_bak_"+timestamp)
+		err = os.Rename(fullPath, bakPath)
 		if err != nil {
 			return err
 		}
 	}
-	f, err := os.Create(filepath)
+	f, err := os.Create(fullPath)
 	if err != nil {
 		return err
 	}
@@ -32,8 +35,13 @@ func manageLocalStoreFile(filepath string) error {
 }
 
 // 获取所有store数据写入文件
-func fetchAllStoreDataAndWriteToFile[R any](ctx context.Context, s store.SelectAllFunc[R], filePath string) error {
-	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, os.ModePerm)
+func fetchAllStoreDataAndWriteToFile[R any](ctx context.Context, s store.SelectAllFunc[R], rootPath, fileName string) error {
+	err := manageLocalStoreFile(rootPath, fileName)
+	if err != nil {
+		return err
+	}
+	fullPath := filepath.Join(rootPath, fileName)
+	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_WRONLY, os.ModePerm)
 	if err != nil {
 		return err
 	}

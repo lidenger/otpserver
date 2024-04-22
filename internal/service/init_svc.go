@@ -45,11 +45,13 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 		SecretSvcIns.Store = mysqlSecretStore
 		ServerSvcIns.Store = mysqlServerStore
 		localSecretStore.Store = mysqlSecretStore
+		localServerStore.Store = mysqlServerStore
 		addSvcStore(enum.MySQLStore, SecretSvcIns.Store, ServerSvcIns.Store)
 	case enum.PostGreSQLStore:
 		SecretSvcIns.Store = pgsqlSecretStore
 		ServerSvcIns.Store = pgsqlServerStore
 		localSecretStore.Store = pgsqlSecretStore
+		localServerStore.Store = pgsqlServerStore
 		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store, ServerSvcIns.Store)
 	}
 

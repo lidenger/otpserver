@@ -9,7 +9,7 @@ import (
 type MemoryConf struct {
 }
 
-var MemoryConfIns = &MemoryConf{}
+var Ins = &MemoryConf{}
 
 func Initialize(conf *config.M) {
 

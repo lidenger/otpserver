@@ -45,14 +45,15 @@ type PagingFunc[P any, R any] interface {
 }
 
 type SelectAllFunc[R any] interface {
+	HealthFunc
 	SelectAll(ctx context.Context) (result []R, err error)
 }
 
 type SelectFunc[P any, R any] interface {
 	HealthFunc
-	SelectAllFunc[R]
 	SelectByCondition(ctx context.Context, condition P) (result []R, err error)
 	SelectById(ctx context.Context, ID int64) (R, error)
+	SelectAllFunc[R]
 }
 
 // SecretStore 账号密钥
@@ -121,12 +122,12 @@ func Initialize() {
 	isKnownStore := false
 	if util.Eqs(enum.MySQLStore, c.MainStore, c.BackupStore) {
 		mysqlconf.Initialize(conf)
-		activeStore = append(activeStore, mysqlconf.MySQLConfIns)
+		activeStore = append(activeStore, mysqlconf.Ins)
 		isKnownStore = true
 	}
 	if util.Eqs(enum.PostGreSQLStore, c.MainStore, c.BackupStore) {
 		pgsqlconf.Initialize(conf)
-		activeStore = append(activeStore, pgsqlconf.PgSQLConfIns)
+		activeStore = append(activeStore, pgsqlconf.Ins)
 		isKnownStore = true
 	}
 	if !isKnownStore {
@@ -144,12 +145,12 @@ func Initialize() {
 	// 启用本地存储
 	if conf.Store.IsEnableLocal {
 		localconf.Initialize(conf)
-		activeStore = append(activeStore, localconf.LocalConfIns)
+		activeStore = append(activeStore, localconf.Ins)
 	}
 	// 启用memory存储
 	if conf.Store.IsEnableMemory {
 		memoryconf.Initialize(conf)
-		activeStore = append(activeStore, memoryconf.MemoryConfIns)
+		activeStore = append(activeStore, memoryconf.Ins)
 	}
 }
 
