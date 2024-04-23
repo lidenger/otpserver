@@ -16,6 +16,7 @@ import (
 
 var SecretSvcIns = &SecretSvc{}
 var ServerSvcIns = &ServerSvc{}
+var ServerIpListSvcIns = &ServerIpListSvc{}
 
 // store type | healthFunc
 var svcStoreStatusMap = make(map[string][]store.HealthFunc)
@@ -26,54 +27,69 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 
 	SecretSvcIns.storeDetectionEventChan = storeDetectionEventChan
 	SecretSvcIns.storeDetectionEventChan = storeDetectionEventChan
+	ServerIpListSvcIns.storeDetectionEventChan = storeDetectionEventChan
 
 	mysqlSecretStore := &mysqlstore.SecretStore{DB: mysqlconf.DB}
 	mysqlServerStore := &mysqlstore.ServerStore{DB: mysqlconf.DB}
+	mysqlServerIpListStore := &mysqlstore.ServerIpListStore{DB: mysqlconf.DB}
 
 	pgsqlSecretStore := &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
 	pgsqlServerStore := &pgsqlstore.ServerStore{DB: pgsqlconf.DB}
+	pgsqlServerIpListStore := &pgsqlstore.ServerIpListStore{DB: pgsqlconf.DB}
 
 	localStoreRootPath := conf.Server.RootPath + conf.Store.RootPath
 	localSecretStore := &localstore.SecretStore{RootPath: localStoreRootPath}
 	localServerStore := &localstore.ServerStore{RootPath: localStoreRootPath}
+	localServerIpListStore := &localstore.ServerIpListStore{RootPath: localStoreRootPath}
 
 	memoryDependSecretStoreArr := make([]store.SecretStore, 0)
 	memoryDependServerStoreArr := make([]store.ServerStore, 0)
+	memoryDependServerIpListStoreArr := make([]store.ServerIpListStore, 0)
 
 	switch conf.Store.MainStore {
 	case enum.MySQLStore:
 		SecretSvcIns.Store = mysqlSecretStore
 		ServerSvcIns.Store = mysqlServerStore
+		ServerIpListSvcIns.Store = mysqlServerIpListStore
+
 		localSecretStore.Store = mysqlSecretStore
 		localServerStore.Store = mysqlServerStore
-		addSvcStore(enum.MySQLStore, SecretSvcIns.Store, ServerSvcIns.Store)
+		localServerIpListStore.Store = mysqlServerIpListStore
+		addSvcStore(enum.MySQLStore, SecretSvcIns.Store, ServerSvcIns.Store, ServerIpListSvcIns.Store)
 	case enum.PostGreSQLStore:
 		SecretSvcIns.Store = pgsqlSecretStore
 		ServerSvcIns.Store = pgsqlServerStore
+		ServerIpListSvcIns.Store = mysqlServerIpListStore
+
 		localSecretStore.Store = pgsqlSecretStore
 		localServerStore.Store = pgsqlServerStore
-		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store, ServerSvcIns.Store)
+		localServerIpListStore.Store = pgsqlServerIpListStore
+		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store, ServerSvcIns.Store, ServerIpListSvcIns.Store)
 	}
 
 	switch conf.Store.BackupStore {
 	case enum.MySQLStore:
 		SecretSvcIns.StoreBackup = mysqlSecretStore
 		ServerSvcIns.StoreBackup = mysqlServerStore
-		addSvcStore(enum.MySQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.Store)
+		ServerIpListSvcIns.StoreBackup = mysqlServerIpListStore
+		addSvcStore(enum.MySQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup, ServerIpListSvcIns.StoreBackup)
 	case enum.PostGreSQLStore:
 		SecretSvcIns.StoreBackup = pgsqlSecretStore
 		ServerSvcIns.StoreBackup = pgsqlServerStore
-		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup)
+		ServerIpListSvcIns.StoreBackup = pgsqlServerIpListStore
+		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup, ServerIpListSvcIns.StoreBackup)
 	}
 
 	memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, SecretSvcIns.Store, SecretSvcIns.StoreBackup)
 	memoryDependServerStoreArr = append(memoryDependServerStoreArr, ServerSvcIns.Store, ServerSvcIns.StoreBackup)
+	memoryDependServerIpListStoreArr = append(memoryDependServerIpListStoreArr, ServerIpListSvcIns.Store, ServerIpListSvcIns.StoreBackup)
 
 	if conf.Store.IsEnableLocal {
 		memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, localSecretStore)
 		memoryDependServerStoreArr = append(memoryDependServerStoreArr, localServerStore)
+		memoryDependServerIpListStoreArr = append(memoryDependServerIpListStoreArr, localServerIpListStore)
 
-		loadAllStoreArr = append(loadAllStoreArr, localSecretStore, localServerStore)
+		loadAllStoreArr = append(loadAllStoreArr, localSecretStore, localServerStore, localServerIpListStore)
 	}
 
 	if conf.Store.IsEnableMemory {
@@ -89,17 +105,25 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 		}
 		ServerSvcIns.StoreMemory = serverMemory
 
-		loadAllStoreArr = append(loadAllStoreArr, secretMemory, serverMemory)
+		serverIpListMemory := &memorystore.ServerIpListStore{
+			Stores:                  memoryDependServerIpListStoreArr,
+			StoreDetectionEventChan: storeDetectionEventChan,
+		}
+		ServerIpListSvcIns.StoreMemory = serverIpListMemory
 
-		addSvcStore(enum.MemoryStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory)
+		loadAllStoreArr = append(loadAllStoreArr, secretMemory, serverMemory, serverIpListMemory)
+
+		addSvcStore(enum.MemoryStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory, ServerIpListSvcIns.StoreMemory)
 	}
 
-	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc")
+	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc", "ServerIpListSvc")
 }
 
 func LoadAllData() {
-	for _, cache := range loadAllStoreArr {
-		_ = cache.LoadAll(context.Background())
+	for _, s := range loadAllStoreArr {
+		if s.GetStoreType() == enum.LocalStore || s.GetStoreType() == enum.MemoryStore {
+			_ = s.LoadAll(context.Background())
+		}
 	}
 }
 

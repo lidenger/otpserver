@@ -74,6 +74,12 @@ type ServerStore interface {
 	SelectFunc[*param.ServerParam, *model.ServerModel]
 }
 
+type ServerIpListStore interface {
+	InsertFunc[*model.ServerIpListModel]
+	DeleteFunc
+	SelectFunc[*param.ServerIpListParam, *model.ServerIpListModel]
+}
+
 // Tx 事务，这里定义事务接口，不依赖于具体的框架实现，降低耦合
 type Tx interface {
 	Commit()

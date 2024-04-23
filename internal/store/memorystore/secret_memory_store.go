@@ -50,33 +50,20 @@ func (s *SecretStore) getAvailableStore() store.SecretStore {
 }
 
 func (s *SecretStore) LoadAll(ctx context.Context) error {
-	p := &param.SecretPagingParam{}
-	p.PageNo = 1
-	p.PageSize = 100
 	secretStore := s.getAvailableStore()
-	for {
+	data, err := secretStore.SelectAll(ctx)
+	if err != nil {
+		time.Sleep(3 * time.Second)
 		secretStore = s.getAvailableStore()
-		data, _, err := secretStore.Paging(ctx, p)
-		// 查询异常做一次store的检测，重新查询一次
-		if err != nil {
-			s.StoreDetectionEventChan <- struct{}{}
-			time.Sleep(3 * time.Second)
-			secretStore = s.getAvailableStore()
-			data, _, err = secretStore.Paging(ctx, p)
-		}
-		if err != nil {
-			return err
-		}
-		// 获取了所有数据
-		if len(data) == 0 {
-			break
-		}
-		for _, m := range data {
-			secretCacheMap[m.Account] = m
-		}
-		p.PageNo++
+		data, err = secretStore.SelectAll(ctx)
 	}
-	log.Info("Memory从[" + secretStore.GetStoreType() + "]存储中获取数据成功，总数: " + strconv.Itoa(len(secretCacheMap)))
+	if err != nil {
+		return err
+	}
+	for _, m := range data {
+		secretCacheMap[m.Account] = m
+	}
+	log.Info("Memory从[" + secretStore.GetStoreType() + "]存储中获取账号密钥数据成功，总数: " + strconv.Itoa(len(secretCacheMap)))
 	return nil
 }
 
@@ -119,20 +106,24 @@ func (s *SecretStore) Insert(ctx context.Context, m *model.AccountSecretModel) (
 	return store.EmptyTxIns, err
 }
 
-func (s *SecretStore) Update(ctx context.Context, ID int64, _ map[string]any) (store.Tx, error) {
+// 从可用的store中获取数据并更新缓存
+func (s *SecretStore) selectByIdAndRefresh(ctx context.Context, ID int64, isRefresh bool) (*model.AccountSecretModel, error) {
 	m, err := s.getAvailableStore().SelectById(ctx, ID)
 	if err != nil {
 		s.StoreDetectionEventChan <- struct{}{}
 		time.Sleep(3 * time.Second)
 		m, err = s.getAvailableStore().SelectById(ctx, ID)
 	}
-	if err != nil {
-		return nil, err
+	if m != nil && isRefresh {
+		err = s.Refresh(ctx, &param.SecretParam{Account: m.Account})
 	}
-	if m == nil {
-		return store.EmptyTxIns, nil
-	}
-	secretCacheMap[m.Account] = m
+	m2 := &model.AccountSecretModel{}
+	err = copier.Copy(m2, m)
+	return m2, err
+}
+
+func (s *SecretStore) Update(ctx context.Context, ID int64, _ map[string]any) (store.Tx, error) {
+	_, err := s.selectByIdAndRefresh(ctx, ID, true)
 	return store.EmptyTxIns, err
 }
 
@@ -145,13 +136,9 @@ func (s *SecretStore) Paging(_ context.Context, _ *param.SecretPagingParam) (res
 func (s *SecretStore) SelectById(_ context.Context, ID int64) (*model.AccountSecretModel, error) {
 	for _, m := range secretCacheMap {
 		if m.ID == ID {
-			// 不影响原始数据
 			m2 := &model.AccountSecretModel{}
 			err := copier.Copy(m2, m)
-			if err != nil {
-				return nil, err
-			}
-			return m2, nil
+			return m2, err
 		}
 	}
 	return nil, nil
@@ -176,10 +163,15 @@ func (s *SecretStore) SelectByCondition(_ context.Context, condition *param.Secr
 	return result, nil
 }
 
-func (s *SecretStore) SelectAll(ctx context.Context) ([]*model.AccountSecretModel, error) {
+func (s *SecretStore) SelectAll(_ context.Context) ([]*model.AccountSecretModel, error) {
 	result := make([]*model.AccountSecretModel, 0)
 	for _, m := range secretCacheMap {
-		result = append(result, m)
+		m2 := &model.AccountSecretModel{}
+		err := copier.Copy(m2, m)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, m2)
 	}
 	return result, nil
 }
@@ -187,10 +179,10 @@ func (s *SecretStore) SelectAll(ctx context.Context) ([]*model.AccountSecretMode
 func (s *SecretStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {
 	m, err := s.SelectById(ctx, ID)
 	if err != nil {
-		return nil, err
+		return store.EmptyTxIns, err
 	}
 	if m != nil {
-		s.Remove(ctx, &param.SecretParam{Account: m.Account})
+		delete(secretCacheMap, m.Account)
 	}
-	return store.EmptyTxIns, nil
+	return store.EmptyTxIns, err
 }

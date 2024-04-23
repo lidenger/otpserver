@@ -9,13 +9,13 @@ import (
 	"time"
 )
 
-func SecretInsert(ctx context.Context, DB *gorm.DB, m *model.AccountSecretModel) (store.Tx, error) {
+func SecretInsert(_ context.Context, DB *gorm.DB, m *model.AccountSecretModel) (store.Tx, error) {
 	tx := DB.Begin()
 	tx = tx.Create(m)
 	return getTx(tx), tx.Error
 }
 
-func SecretUpdate(ctx context.Context, DB *gorm.DB, ID int64, params map[string]any) (store.Tx, error) {
+func SecretUpdate(_ context.Context, DB *gorm.DB, ID int64, params map[string]any) (store.Tx, error) {
 	tx := DB.Begin()
 	tx = tx.Model(&model.AccountSecretModel{})
 	tx = tx.Where("id = ?", ID)
@@ -24,7 +24,7 @@ func SecretUpdate(ctx context.Context, DB *gorm.DB, ID int64, params map[string]
 	return getTx(tx), tx.Error
 }
 
-func SecretPaging(ctx context.Context, DB *gorm.DB, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
+func SecretPaging(_ context.Context, DB *gorm.DB, param *param.SecretPagingParam) (result []*model.AccountSecretModel, count int64, err error) {
 	db := ConfigPagingParam(param.PageNo, param.PageSize, DB)
 	if param.SearchTxt != "" {
 		if param.SearchTxt == "启用" {
@@ -43,7 +43,7 @@ func SecretPaging(ctx context.Context, DB *gorm.DB, param *param.SecretPagingPar
 	return
 }
 
-func SecretSelectById(ctx context.Context, DB *gorm.DB, ID int64) (result *model.AccountSecretModel, err error) {
+func SecretSelectById(_ context.Context, DB *gorm.DB, ID int64) (result *model.AccountSecretModel, err error) {
 	err = DB.First(&result, "id = ?", ID).Error
 	return
 }
@@ -68,7 +68,7 @@ func SecretSelectAll(_ context.Context, DB *gorm.DB) (result []*model.AccountSec
 	return
 }
 
-func SecretDelete(ctx context.Context, DB *gorm.DB, ID int64) (store.Tx, error) {
+func SecretDelete(_ context.Context, DB *gorm.DB, ID int64) (store.Tx, error) {
 	tx := DB.Begin()
 	tx = tx.Delete(&model.AccountSecretModel{}, ID)
 	return getTx(tx), tx.Error

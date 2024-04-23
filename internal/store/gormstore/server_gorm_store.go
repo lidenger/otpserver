@@ -9,13 +9,13 @@ import (
 	"time"
 )
 
-func ServerInsert(ctx context.Context, DB *gorm.DB, m *model.ServerModel) (store.Tx, error) {
+func ServerInsert(_ context.Context, DB *gorm.DB, m *model.ServerModel) (store.Tx, error) {
 	tx := DB.Begin()
 	tx = tx.Create(m)
 	return getTx(tx), tx.Error
 }
 
-func ServerUpdate(ctx context.Context, DB *gorm.DB, ID int64, params map[string]any) (store.Tx, error) {
+func ServerUpdate(_ context.Context, DB *gorm.DB, ID int64, params map[string]any) (store.Tx, error) {
 	tx := DB.Begin()
 	tx = tx.Model(&model.ServerModel{})
 	tx = tx.Where("id = ?", ID)
@@ -24,7 +24,7 @@ func ServerUpdate(ctx context.Context, DB *gorm.DB, ID int64, params map[string]
 	return getTx(tx), tx.Error
 }
 
-func ServerPaging(ctx context.Context, DB *gorm.DB, param *param.ServerPagingParam) (result []*model.ServerModel, count int64, err error) {
+func ServerPaging(_ context.Context, DB *gorm.DB, param *param.ServerPagingParam) (result []*model.ServerModel, count int64, err error) {
 	db := ConfigPagingParam(param.PageNo, param.PageSize, DB)
 	if param.SearchTxt != "" {
 		if param.SearchTxt == "启用" {
@@ -43,7 +43,7 @@ func ServerPaging(ctx context.Context, DB *gorm.DB, param *param.ServerPagingPar
 	return
 }
 
-func ServerSelectByCondition(ctx context.Context, DB *gorm.DB, condition *param.ServerParam) (result []*model.ServerModel, err error) {
+func ServerSelectByCondition(_ context.Context, DB *gorm.DB, condition *param.ServerParam) (result []*model.ServerModel, err error) {
 	db := DB
 	if condition.ID != 0 {
 		db = db.Where("ID = ?", condition.ID)
@@ -66,12 +66,12 @@ func ServerSelectAll(_ context.Context, DB *gorm.DB) (result []*model.ServerMode
 	return
 }
 
-func ServerSelectById(ctx context.Context, DB *gorm.DB, ID int64) (result *model.ServerModel, err error) {
+func ServerSelectById(_ context.Context, DB *gorm.DB, ID int64) (result *model.ServerModel, err error) {
 	err = DB.First(&result, "id = ?", ID).Error
 	return
 }
 
-func ServerDelete(ctx context.Context, DB *gorm.DB, ID int64) (store.Tx, error) {
+func ServerDelete(_ context.Context, DB *gorm.DB, ID int64) (store.Tx, error) {
 	tx := DB.Begin()
 	tx = tx.Delete(&model.AccountSecretModel{}, ID)
 	return getTx(tx), tx.Error
