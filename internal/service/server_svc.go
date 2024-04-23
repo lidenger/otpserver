@@ -34,7 +34,7 @@ func (s *ServerSvc) Add(ctx context.Context, p *param.ServerParam) error {
 	if err != nil {
 		return err
 	}
-	err = MultiStoreInsert[*model.ServerModel](ctx, s.storeDetectionEventChan, m, s.Store, s.StoreBackup)
+	err = MultiStoreInsert[*model.ServerModel](ctx, s.storeDetectionEventChan, m, s.Store, s.StoreBackup, s.StoreMemory)
 	return err
 }
 

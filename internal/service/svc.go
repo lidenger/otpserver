@@ -165,3 +165,31 @@ func MultiStoreUpdate(ctx context.Context, storeDetectionEventChan chan<- struct
 	}
 	return err
 }
+
+func MultiStoreDelete(ctx context.Context, storeDetectionEventChan chan<- struct{}, ID int64, stores ...store.DeleteFunc) error {
+	main := stores[0]
+	backup := stores[1]
+	if main.GetStoreErr() != nil {
+		return otperr.ErrStore(main.GetStoreErr())
+	}
+	var backupExec doubleWriteFunc = nil
+	if backup != nil {
+		if backup.GetStoreErr() != nil {
+			return otperr.ErrStore(backup.GetStoreErr())
+		}
+		backupExec = func() (store.Tx, error) {
+			return backup.Delete(ctx, ID)
+		}
+	}
+	err := DoubleWrite(storeDetectionEventChan, func() (store.Tx, error) {
+		return main.Delete(ctx, ID)
+	}, backupExec)
+	// 其他store
+	for _, s := range stores[2:] {
+		tx, _ := s.Delete(ctx, ID)
+		if tx != nil {
+			tx.Commit()
+		}
+	}
+	return err
+}

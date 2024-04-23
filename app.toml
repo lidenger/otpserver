@@ -30,8 +30,11 @@ backupStore = "pgsql"
 rootPath = "/store/"
 # 是否启用本地存储（数据冗余一份到本地磁盘） true | false
 isEnableLocal = true
+# 周期备份数据到本地，注意只有启用本地存储才有效，单位：小时
+cycleBakToLocalHour = 4
 # 是否启用内存存储（数据冗余一份到内存，优先查询） true | false
 isEnableMemory = true
+
 
 [mysql]
 address = "127.0.0.1:3306"

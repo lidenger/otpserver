@@ -3,13 +3,20 @@ package timer
 import (
 	"context"
 	"github.com/lidenger/otpserver/config/log"
+	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/internal/service"
 	"time"
 )
 
-var localStoreCheckTicker = time.NewTicker(1 * time.Minute)
+// 每4小时备份一次数据到本地
+var localStoreCheckTicker *time.Ticker
 
 func StartLocalStoreCheckTicker() {
+	if localStoreCheckTicker == nil {
+		conf := serverconf.GetSysConf()
+		hour := time.Duration(conf.Store.CycleBakToLocalHour)
+		localStoreCheckTicker = time.NewTicker(hour * time.Hour)
+	}
 	go func() {
 		for range localStoreCheckTicker.C {
 			for _, ls := range service.FetchLocalStore() {

@@ -26,6 +26,11 @@ type ServerParam struct {
 	IsOperateSensitiveData uint8  `json:"isOperateSensitiveData"` // 是否可以操作敏感数据（例如：密钥数据），1是，2否
 }
 
+type ServerIpListParam struct {
+	Sign string `json:"serverSign" valid:"required"`
+	IP   string `json:"ip" valid:"required"`
+}
+
 type ServerPagingParam struct {
 	ServerParam
 	PagingParam

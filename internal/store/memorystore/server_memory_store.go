@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"github.com/jinzhu/copier"
+	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/enum"
 	"github.com/lidenger/otpserver/pkg/otperr"
 	"github.com/lidenger/otpserver/pkg/util"
+	"strconv"
 	"time"
 )
 
@@ -19,7 +21,7 @@ type ServerStore struct {
 	err                     error
 }
 
-// account | model
+// sign | model
 var serverCacheMap = make(map[string]*model.ServerModel)
 
 // 确保SecretStore实现了store.SecretStore
@@ -47,39 +49,33 @@ func (s *ServerStore) getAvailableStore() store.ServerStore {
 	return nil
 }
 
+// LoadAll cache store func
 func (s *ServerStore) LoadAll(ctx context.Context) error {
-	p := &param.ServerPagingParam{}
-	p.PageNo = 1
-	p.PageSize = 100
-	for {
-		data, _, err := s.getAvailableStore().Paging(ctx, p)
-		// 查询异常做一次store的检测，重新查询一次
-		if err != nil {
-			s.StoreDetectionEventChan <- struct{}{}
-			time.Sleep(3 * time.Second)
-			data, _, err = s.getAvailableStore().Paging(ctx, p)
-		}
-		if err != nil {
-			return err
-		}
-		// 获取了所有数据
-		if len(data) == 0 {
-			break
-		}
-		for _, m := range data {
-			serverCacheMap[m.Sign] = m
-		}
-		p.PageNo++
+	serverStore := s.getAvailableStore()
+	data, err := serverStore.SelectAll(ctx)
+	if err != nil {
+		time.Sleep(3 * time.Second)
+		serverStore = s.getAvailableStore()
+		data, err = serverStore.SelectAll(ctx)
 	}
+	if err != nil {
+		return err
+	}
+	for _, m := range data {
+		serverCacheMap[m.Sign] = m
+	}
+	log.Info("Memory从[" + serverStore.GetStoreType() + "]存储中获取接入服务数据成功，总数: " + strconv.Itoa(len(serverCacheMap)))
 	return nil
 }
 
+// Remove cache store func
 func (s *ServerStore) Remove(_ context.Context, p any) {
 	if sp, ok := p.(*param.ServerParam); ok {
 		delete(serverCacheMap, sp.Sign)
 	}
 }
 
+// Refresh cache store func
 func (s *ServerStore) Refresh(ctx context.Context, par any) error {
 	serverSign := ""
 	if sp, ok := par.(*param.ServerParam); ok {
@@ -102,6 +98,7 @@ func (s *ServerStore) Refresh(ctx context.Context, par any) error {
 		// 存储中没有，删除缓存
 		s.Remove(ctx, par)
 	} else {
+		// 更新缓存
 		serverCacheMap[serverSign] = m
 	}
 	return nil
@@ -122,10 +119,9 @@ func (s *ServerStore) Update(ctx context.Context, ID int64, _ map[string]any) (s
 	if err != nil {
 		return nil, err
 	}
-	if m == nil {
-		return store.EmptyTxIns, nil
+	if m != nil {
+		serverCacheMap[m.Sign] = m
 	}
-	serverCacheMap[m.Sign] = m
 	return store.EmptyTxIns, err
 }
 
@@ -137,7 +133,6 @@ func (s *ServerStore) Paging(_ context.Context, _ *param.ServerPagingParam) (res
 func (s *ServerStore) SelectById(_ context.Context, ID int64) (*model.ServerModel, error) {
 	for _, m := range serverCacheMap {
 		if m.ID == ID {
-			// 不影响原始数据
 			m2 := &model.ServerModel{}
 			err := copier.Copy(m2, m)
 			if err != nil {
@@ -168,10 +163,15 @@ func (s *ServerStore) SelectByCondition(_ context.Context, condition *param.Serv
 	return result, nil
 }
 
-func (s *ServerStore) SelectAll(ctx context.Context) ([]*model.ServerModel, error) {
+func (s *ServerStore) SelectAll(_ context.Context) ([]*model.ServerModel, error) {
 	result := make([]*model.ServerModel, 0)
 	for _, m := range serverCacheMap {
-		result = append(result, m)
+		m2 := &model.ServerModel{}
+		err := copier.Copy(m2, m)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, m2)
 	}
 	return result, nil
 }
@@ -182,7 +182,7 @@ func (s *ServerStore) Delete(ctx context.Context, ID int64) (store.Tx, error) {
 		return nil, err
 	}
 	if m != nil {
-		s.Remove(ctx, &param.ServerParam{Sign: m.Sign})
+		delete(serverCacheMap, m.Sign)
 	}
 	return store.EmptyTxIns, nil
 }

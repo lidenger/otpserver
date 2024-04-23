@@ -2,13 +2,11 @@ package localstore
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/internal/model"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/enum"
-	"os"
 	"path/filepath"
 )
 
@@ -46,16 +44,9 @@ func (s *SecretStore) LoadAll(ctx context.Context) error {
 	return nil
 }
 
-func (s *SecretStore) FetchAll(_ context.Context) (result []*model.AccountSecretModel, err error) {
+func (s *SecretStore) FetchAll(ctx context.Context) (result []*model.AccountSecretModel, err error) {
 	filePath := filepath.Join(s.RootPath, SecretFileName)
-	js, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(js, &result)
-	if err != nil {
-		return nil, err
-	}
+	result, err = fetchAll[*model.AccountSecretModel](ctx, filePath)
 	return
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/enum"
+	"path/filepath"
 )
 
 type ServerStore struct {
@@ -33,6 +34,7 @@ func (s *ServerStore) SetStoreErr(err error) {
 	s.err = err
 }
 
+// LoadAll 从store中获取数据到local存储
 func (s *ServerStore) LoadAll(ctx context.Context) error {
 	err := s.Store.GetStoreErr()
 	if err != nil {
@@ -43,8 +45,11 @@ func (s *ServerStore) LoadAll(ctx context.Context) error {
 	return nil
 }
 
-func (s *ServerStore) FetchAll(ctx context.Context) ([]*model.ServerModel, error) {
-	return nil, nil
+// FetchAll 从local存储获取所有数据
+func (s *ServerStore) FetchAll(ctx context.Context) (result []*model.ServerModel, err error) {
+	filePath := filepath.Join(s.RootPath, ServerFileName)
+	result, err = fetchAll[*model.ServerModel](ctx, filePath)
+	return
 }
 
 func (s *ServerStore) Insert(ctx context.Context, m *model.ServerModel) (store.Tx, error) {

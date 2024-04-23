@@ -3,6 +3,7 @@ package localstore
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/lidenger/otpserver/internal/store"
 	"github.com/lidenger/otpserver/pkg/util"
 	"os"
@@ -56,4 +57,38 @@ func fetchAllStoreDataAndWriteToFile[R any](ctx context.Context, s store.SelectA
 		return err
 	}
 	return nil
+}
+
+type r[R any] struct {
+	result []R
+	err    error
+}
+
+func fetchAll[R any](ctx context.Context, filePath string) (result []R, err error) {
+	work := make(chan struct{})
+	rins := &r[R]{}
+	go func() {
+		defer func() {
+			close(work)
+		}()
+		js, err := os.ReadFile(filePath)
+		if err != nil {
+			rins.result, rins.err = nil, err
+			return
+		}
+		err = json.Unmarshal(js, &rins.result)
+		if err != nil {
+			rins.result, rins.err = nil, err
+			return
+		}
+		return
+	}()
+
+	select {
+	case <-work:
+		result, err = rins.result, rins.err
+	case <-ctx.Done():
+		result, err = rins.result, errors.New("从local存储中获取所有数据超时")
+	}
+	return
 }

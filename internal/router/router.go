@@ -52,6 +52,10 @@ func api(g *gin.Engine) {
 				serverv1.POST("", handler.AddServer)
 				serverv1.PUT("/base", handler.EditBase)
 				serverv1.PUT("/enable", handler.SetServerEnable)
+
+				serverv1.GET(":sign/iplist", handler.GetServerIpList)
+				serverv1.POST(":sign/iplist", handler.AddServerIpList)
+				serverv1.DELETE(":sign/iplist", handler.RemoveServerIpList)
 			}
 		}
 	}

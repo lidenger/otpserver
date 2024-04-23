@@ -48,15 +48,15 @@ func ErrParamIllegal(param any) IErr {
 }
 
 // ErrRepeatAdd 重复添加
-func ErrRepeatAdd(err error) IErr {
+func ErrRepeatAdd(err any) IErr {
 	return &Err{
-		error:    err,
+		error:    wrapStrErr(err),
 		httpCode: http.StatusBadRequest,
 		code:     code.ParamRepeatAdd,
 	}
 }
 
-// ErrDataNotExists 重复添加
+// ErrDataNotExists 数据不存在
 func ErrDataNotExists(format string, arg ...any) IErr {
 	msg := fmt.Sprintf(format, arg)
 	return &Err{
