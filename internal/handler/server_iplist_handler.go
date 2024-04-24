@@ -48,7 +48,7 @@ func validSignAndIpParam(ctx *gin.Context) *param.ServerIpListParam {
 
 func RemoveServerIpList(ctx *gin.Context) {
 	p := validSignAndIpParam(ctx)
-	if validSignAndIpParam(ctx) == nil {
+	if p == nil {
 		return
 	}
 	err := service.ServerIpListSvcIns.Remove(ctx, p)
@@ -57,7 +57,7 @@ func RemoveServerIpList(ctx *gin.Context) {
 
 func AddServerIpList(ctx *gin.Context) {
 	p := validSignAndIpParam(ctx)
-	if validSignAndIpParam(ctx) == nil {
+	if p == nil {
 		return
 	}
 	err := service.ServerIpListSvcIns.Add(ctx, p)

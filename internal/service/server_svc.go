@@ -45,13 +45,18 @@ func (s *ServerSvc) NewServerModel(p *param.ServerParam) (*model.ServerModel, er
 	m.Remark = p.Remark
 	m.IsEnable = p.IsEnable
 	m.IsOperateSensitiveData = p.IsOperateSensitiveData
+	m.IsEnableIPlist = p.IsEnableIPlist
 	// 默认启用
-	if p.IsEnable == 0 {
+	if m.IsEnable == 0 {
 		m.IsEnable = 1
 	}
 	// 默认不启用操作敏感信息
-	if p.IsOperateSensitiveData == 0 {
+	if m.IsOperateSensitiveData == 0 {
 		m.IsOperateSensitiveData = 2
+	}
+	// 默认不启用IP白名单
+	if m.IsEnableIPlist == 0 {
+		m.IsEnableIPlist = 2
 	}
 	// 服务密钥
 	secret := util.Generate32Str()
@@ -75,7 +80,7 @@ func (s *ServerSvc) NewServerModel(p *param.ServerParam) (*model.ServerModel, er
 
 // CalcDataCheckSum 计算数据校验和
 func (s *ServerSvc) CalcDataCheckSum(m *model.ServerModel) string {
-	data := fmt.Sprintf("%d,%d,%s,%s,%s", m.IsEnable, m.IsOperateSensitiveData, m.Sign, m.Secret, m.IV)
+	data := fmt.Sprintf("%d,%d,%d,%s,%s,%s", m.IsEnable, m.IsOperateSensitiveData, m.IsEnableIPlist, m.Sign, m.Secret, m.IV)
 	return crypt.HmacDigest(cmd.P.RootKey192, data)
 }
 
@@ -151,17 +156,21 @@ func (s *ServerSvc) SetEnable(ctx context.Context, p *param.ServerParam) error {
 		return otperr.ErrParamIllegal(fmt.Sprintf("非法参数:%d", p.ID))
 	}
 	// 数据一致无需更新
-	if m.IsEnable == p.IsEnable && m.IsOperateSensitiveData == p.IsOperateSensitiveData {
+	if m.IsEnable == p.IsEnable &&
+		m.IsOperateSensitiveData == p.IsOperateSensitiveData &&
+		m.IsEnableIPlist == p.IsEnableIPlist {
 		return nil
 	}
 	m.IsEnable = p.IsEnable
 	m.IsOperateSensitiveData = p.IsOperateSensitiveData
+	m.IsEnableIPlist = p.IsEnableIPlist
 	checkSum := s.CalcDataCheckSum(m)
 	params := make(map[string]any)
 	params["is_enable"] = m.IsEnable
 	params["is_operate_sensitive_data"] = m.IsOperateSensitiveData
+	params["is_enable_iplist"] = m.IsEnableIPlist
 	params["data_check"] = checkSum
-	err = MultiStoreUpdate(ctx, s.storeDetectionEventChan, m.ID, params, s.Store, s.StoreBackup)
+	err = MultiStoreUpdate(ctx, s.storeDetectionEventChan, m.ID, params, s.Store, s.StoreBackup, s.StoreMemory)
 	return err
 }
 
