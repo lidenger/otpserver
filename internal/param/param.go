@@ -23,12 +23,13 @@ type ServerParam struct {
 	Name                   string `json:"serverName" valid:"required"`
 	Remark                 string `json:"serverRemark"`
 	IsEnable               uint8  `json:"isEnable"`
+	IsEnableIPlist         uint8  `json:"isEnableIPlist"`         // 是否启用服务IP白名单，1启用，2禁用
 	IsOperateSensitiveData uint8  `json:"isOperateSensitiveData"` // 是否可以操作敏感数据（例如：密钥数据），1是，2否
 }
 
 type ServerIpListParam struct {
 	Sign string `json:"serverSign" valid:"required"`
-	IP   string `json:"ip" valid:"required"`
+	IP   string `json:"ip" valid:"required,ipv4"`
 }
 
 type ServerPagingParam struct {

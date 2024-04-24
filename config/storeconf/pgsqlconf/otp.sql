@@ -12,7 +12,7 @@
  Target Server Version : 160002 (160002)
  File Encoding         : 65001
 
- Date: 15/04/2024 11:27:11
+ Date: 24/04/2024 12:13:45
 */
 
 
@@ -117,6 +117,7 @@ CREATE TABLE "public"."otp_server" (
   "server_remark" varchar(300) COLLATE "pg_catalog"."default",
   "is_enable" int2,
   "is_operate_sensitive_data" int2,
+  "is_enable_iplist" int2,
   "data_check" varchar(100) COLLATE "pg_catalog"."default",
   "create_time" timestamp(6),
   "update_time" timestamp(6)
@@ -130,7 +131,8 @@ COMMENT ON COLUMN "public"."otp_server"."server_secret_iv" IS '服务密钥IV';
 COMMENT ON COLUMN "public"."otp_server"."server_remark" IS '服务描述';
 COMMENT ON COLUMN "public"."otp_server"."is_enable" IS '是否启用，1启用，2禁用';
 COMMENT ON COLUMN "public"."otp_server"."is_operate_sensitive_data" IS '是否可以操作敏感数据（例如：密钥数据），1是，2否';
-COMMENT ON COLUMN "public"."otp_server"."data_check" IS '数据校验 = HMACSHA256(KEY,is_enable +  server_sign + server_secret_cipher + server_secret_iv)';
+COMMENT ON COLUMN "public"."otp_server"."is_enable_iplist" IS '是否启用服务IP白名单，1启用，2禁用';
+COMMENT ON COLUMN "public"."otp_server"."data_check" IS '数据校验 ';
 COMMENT ON COLUMN "public"."otp_server"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."otp_server"."update_time" IS '更新时间';
 COMMENT ON TABLE "public"."otp_server" IS '接入服务';
@@ -200,21 +202,6 @@ CREATE INDEX "idx_otp_operation_log_update_time" ON "public"."otp_operation_log"
 -- Primary Key structure for table otp_operation_log
 -- ----------------------------
 ALTER TABLE "public"."otp_operation_log" ADD CONSTRAINT "otp_operation_log_pkey" PRIMARY KEY ("id");
-
--- ----------------------------
--- Indexes structure for table otp_server
--- ----------------------------
-CREATE INDEX "idx_otp_server_server_sign" ON "public"."otp_server" USING btree (
-  "server_sign" COLLATE "pg_catalog"."default" "pg_catalog"."text_ops" ASC NULLS LAST
-);
-CREATE INDEX "idx_otp_server_update_time" ON "public"."otp_server" USING btree (
-  "update_time" "pg_catalog"."timestamp_ops" ASC NULLS LAST
-);
-
--- ----------------------------
--- Primary Key structure for table otp_server
--- ----------------------------
-ALTER TABLE "public"."otp_server" ADD CONSTRAINT "otp_server_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Indexes structure for table otp_server_ip_whitelist
