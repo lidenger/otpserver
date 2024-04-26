@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	admin_ui "github.com/lidenger/otpserver/admin-ui"
+	adminui "github.com/lidenger/otpserver/admin-ui"
 	"github.com/lidenger/otpserver/cmd"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
+	"github.com/lidenger/otpserver/internal/monitor"
 	"github.com/lidenger/otpserver/internal/router"
 	"github.com/lidenger/otpserver/internal/service"
 	"github.com/lidenger/otpserver/internal/store"
@@ -45,7 +46,8 @@ func main() {
 	service.LoadAllData()
 
 	g := router.Initialize()
-	admin_ui.Initialize(g)
+	adminui.Initialize(g)
+	monitor.InitPrometheusMonitor(g)
 	httpPort := serverconf.GetSysConf().Server.Port
 	server := &http.Server{
 		Addr:    fmt.Sprintf("0.0.0.0:%d", httpPort),
