@@ -3,6 +3,7 @@ package timer
 import (
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/storeconf"
+	"github.com/lidenger/otpserver/internal/monitor"
 	"github.com/lidenger/otpserver/internal/service"
 	"github.com/lidenger/otpserver/internal/store"
 	"time"
@@ -40,7 +41,9 @@ func testStore(s storeconf.Status) {
 	err := s.TestStore()
 	if err != nil {
 		log.Error(s.GetStoreType()+"存储检测异常:%s", err.Error())
-		// TODO 发送存储异常报警消息
+		monitor.StoreStatusError(s.GetStoreType())
+	} else {
+		monitor.StoreStatusRight(s.GetStoreType())
 	}
 	svcStores := service.FetchSvcStores(s.GetStoreType())
 	for _, svcStore := range svcStores {
