@@ -17,13 +17,15 @@ var CodeLevelProtectIV = []byte("ad5457f8ea5711ee")
 
 // Param 命令参数
 type Param struct {
-	IsInitMode  bool   // 初始化模式
-	IsToolMode  bool   // 工具模式
-	Encrypt     bool   // 工具模式-加密数据
-	EncryptData string // 工具模式-加密的源数据
-	ConfSource  string // 配置来源 nacos,local,default
-	ConfFile    string // 配置文件
-	AppKeyFile  string // app key file 路径
+	IsInitMode      bool   // 初始化模式
+	IsInitAdminMode bool   // 初始化admin模式
+	AdminPassword   string // admin密码
+	IsToolMode      bool   // 工具模式
+	Encrypt         bool   // 工具模式-加密数据
+	EncryptData     string // 工具模式-加密的源数据
+	ConfSource      string // 配置来源 nacos,local,default
+	ConfFile        string // 配置文件
+	AppKeyFile      string // app key file 路径
 	*Crypt
 }
 
@@ -40,6 +42,7 @@ var P *Param
 func InitParam() {
 	P = &Param{}
 	flag.BoolVar(&P.IsInitMode, "init", false, "系统初始化")
+	flag.BoolVar(&P.IsInitAdminMode, "admin", false, "初始化admin账号密码")
 	flag.StringVar(&P.ConfSource, "confSource", "default", "配置来源[nacos,local,default]")
 	flag.StringVar(&P.ConfFile, "confFile", "", "配置文件")
 	flag.BoolVar(&P.IsToolMode, "tool", false, "工具模式")
@@ -49,7 +52,7 @@ func InitParam() {
 	flag.Parse()
 }
 
-// InitMode 系统初始化模式，生成系统启动文件（高敏感文件，需要较强的管理流程）
+// InitMode 系统初始化模式，生成系统启动文件（高敏感文件，需要较严格的管理流程）
 func InitMode() {
 	rootKey128 := util.Generate16Str()
 	rootKey192 := util.Generate24Str()
@@ -114,15 +117,24 @@ func AnalysisKeyFile(keyFile string) *Crypt {
 
 // ToolMode 工具模式
 func ToolMode() {
-	if P.Encrypt {
-		if len(P.EncryptData) == 0 {
-			panic("加密模式没有提供加密数据,请使用[-data=\"xxx\"]提供加密数据")
-		}
-		data := []byte(P.EncryptData)
-		cipher, err := crypt.Encrypt(P.RootKey256, P.IV, data)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("数据:%s,加密后密文:%s", P.EncryptData, cipher)
+	if !P.Encrypt {
+		return
 	}
+	if len(P.EncryptData) == 0 {
+		panic("加密模式没有提供加密数据,请使用[-data=\"xxx\"]提供加密数据")
+	}
+	data := []byte(P.EncryptData)
+	cipher, err := crypt.Encrypt(P.RootKey256, P.IV, data)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("数据:%s,加密后密文:%s", P.EncryptData, cipher)
+}
+
+// InitAdminMode 初始化admin账号密码(也可用于重置admin账号密码)
+func InitAdminMode() {
+	if !P.IsInitAdminMode {
+		return
+	}
+
 }

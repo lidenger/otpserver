@@ -74,10 +74,20 @@ type ServerStore interface {
 	SelectFunc[*param.ServerParam, *model.ServerModel]
 }
 
+// ServerIpListStore 接入服务IP白名单
 type ServerIpListStore interface {
 	InsertFunc[*model.ServerIpListModel]
 	DeleteFunc
 	SelectFunc[*param.ServerIpListParam, *model.ServerIpListModel]
+}
+
+// ConfStore 系统配置
+type ConfStore interface {
+	InsertFunc[*model.SysConfModel]
+	UpdateFunc
+	DeleteFunc
+	PagingFunc[*param.SysConfPagingParam, *model.SysConfModel]
+	SelectFunc[*param.SysConfParam, *model.SysConfModel]
 }
 
 // Tx 事务，这里定义事务接口，不依赖于具体的框架实现，降低耦合
