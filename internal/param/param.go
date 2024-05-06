@@ -41,3 +41,13 @@ type GenAccessTokenParam struct {
 	ServerSign string `json:"serverSign" valid:"required"`
 	TimeToken  string `json:"timeToken" valid:"required"`
 }
+
+type SysConfParam struct {
+	ID  int64  `json:"id"`
+	Key string `json:"key"`
+}
+
+type SysConfPagingParam struct {
+	SysConfParam
+	PagingParam
+}

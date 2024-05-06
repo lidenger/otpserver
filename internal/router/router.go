@@ -35,6 +35,8 @@ func api(g *gin.Engine) {
 		}
 
 		adminv1 := v1.Group("/admin") // 管理平台
+		adminv1.POST("login", handler.Login)
+		adminv1.POST("logout", handler.Logout)
 		adminv1.Use(middleware.AdminAuth)
 		{
 			adminv1Secret := adminv1.Group("/secret") // 账号密钥
