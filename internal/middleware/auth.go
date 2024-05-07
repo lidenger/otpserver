@@ -3,9 +3,11 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/lidenger/otpserver/config/log"
+	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/internal/service"
 	"github.com/lidenger/otpserver/pkg/otperr"
 	"github.com/lidenger/otpserver/pkg/result"
+	"time"
 )
 
 // ServerAuth 接入服务鉴权
@@ -43,6 +45,21 @@ func ServerAuth(c *gin.Context) {
 
 // AdminAuth admin管理平台鉴权
 func AdminAuth(c *gin.Context) {
-	log.Info("AdminAuth%s", "request")
+	token, err := c.Cookie("otp_login_token")
+	if err != nil || len(token) == 0 {
+		log.Warn("获取otp_login_token失败,err:%v", err)
+		result.R(c, otperr.ErrUnauthorized("未获取到token"), "")
+		c.Abort()
+		return
+	}
+	conf := serverconf.GetSysConf()
+	maxValidTime := time.Duration(conf.Server.AdminLoginValidHour) * time.Hour
+	_, err = service.AnalysisLoginToken(token, maxValidTime.Milliseconds())
+	if err != nil {
+		log.Warn("admin login token验证失败,err:%v", err)
+		result.R(c, otperr.ErrUnauthorized("验证token失败"), "")
+		c.Abort()
+		return
+	}
 	c.Next()
 }

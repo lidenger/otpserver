@@ -5,6 +5,7 @@ import (
 	"fmt"
 	adminui "github.com/lidenger/otpserver/admin-ui"
 	"github.com/lidenger/otpserver/cmd"
+	"github.com/lidenger/otpserver/cmd/tool"
 	"github.com/lidenger/otpserver/config/log"
 	"github.com/lidenger/otpserver/config/serverconf"
 	"github.com/lidenger/otpserver/internal/monitor"
@@ -30,13 +31,12 @@ func main() {
 	// 加载解析[app.key]
 	crypt := cmd.AnalysisKeyFile(cmd.P.AppKeyFile)
 	cmd.P.Crypt = crypt
-	// 工具模式
-	if cmd.P.IsToolMode {
-		fmt.Println("工具模式")
-		cmd.ToolMode()
+	// 加密模式
+	if cmd.P.IsEncryptMode {
+		fmt.Println("加密模式")
+		tool.EncryptMode()
 		return
 	}
-	// 正常启动Http服务
 	detectionStoreEventChan := make(chan struct{}, 10)
 	serverconf.Initialize()
 	log.Initialize()
@@ -44,6 +44,12 @@ func main() {
 	service.Initialize(detectionStoreEventChan)
 	timer.TriggerDetectionStore()
 	service.LoadAllData()
+	// 初始化Admin账号密码模式
+	if cmd.P.IsInitAdminMode {
+		fmt.Println("初始化Admin账号密码模式")
+		tool.InitAdminMode()
+		return
+	}
 
 	g := router.Initialize()
 	adminui.Initialize(g)
