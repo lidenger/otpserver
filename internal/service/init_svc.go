@@ -17,6 +17,7 @@ import (
 var SecretSvcIns = &SecretSvc{}
 var ServerSvcIns = &ServerSvc{}
 var ServerIpListSvcIns = &ServerIpListSvc{}
+var ConfSvcIns = &ConfSvc{}
 
 // store type | healthFunc
 var svcStoreStatusMap = make(map[string][]store.HealthFunc)
@@ -28,43 +29,52 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 	SecretSvcIns.storeDetectionEventChan = storeDetectionEventChan
 	SecretSvcIns.storeDetectionEventChan = storeDetectionEventChan
 	ServerIpListSvcIns.storeDetectionEventChan = storeDetectionEventChan
+	ConfSvcIns.storeDetectionEventChan = storeDetectionEventChan
 
 	mysqlSecretStore := &mysqlstore.SecretStore{DB: mysqlconf.DB}
 	mysqlServerStore := &mysqlstore.ServerStore{DB: mysqlconf.DB}
 	mysqlServerIpListStore := &mysqlstore.ServerIpListStore{DB: mysqlconf.DB}
+	mysqlConfStore := &mysqlstore.ConfStore{DB: mysqlconf.DB}
 
 	pgsqlSecretStore := &pgsqlstore.SecretStore{DB: pgsqlconf.DB}
 	pgsqlServerStore := &pgsqlstore.ServerStore{DB: pgsqlconf.DB}
 	pgsqlServerIpListStore := &pgsqlstore.ServerIpListStore{DB: pgsqlconf.DB}
+	pgsqlConfStore := &pgsqlstore.ConfStore{DB: pgsqlconf.DB}
 
 	localStoreRootPath := conf.Server.RootPath + conf.Store.RootPath
 	localSecretStore := &localstore.SecretStore{RootPath: localStoreRootPath}
 	localServerStore := &localstore.ServerStore{RootPath: localStoreRootPath}
 	localServerIpListStore := &localstore.ServerIpListStore{RootPath: localStoreRootPath}
+	localConfStore := &localstore.ConfStore{RootPath: localStoreRootPath}
 
 	memoryDependSecretStoreArr := make([]store.SecretStore, 0)
 	memoryDependServerStoreArr := make([]store.ServerStore, 0)
 	memoryDependServerIpListStoreArr := make([]store.ServerIpListStore, 0)
+	memoryDependConfStoreArr := make([]store.ConfStore, 0)
 
 	switch conf.Store.MainStore {
 	case enum.MySQLStore:
 		SecretSvcIns.Store = mysqlSecretStore
 		ServerSvcIns.Store = mysqlServerStore
 		ServerIpListSvcIns.Store = mysqlServerIpListStore
+		ConfSvcIns.Store = mysqlConfStore
 
 		localSecretStore.Store = mysqlSecretStore
 		localServerStore.Store = mysqlServerStore
 		localServerIpListStore.Store = mysqlServerIpListStore
-		addSvcStore(enum.MySQLStore, SecretSvcIns.Store, ServerSvcIns.Store, ServerIpListSvcIns.Store)
+		localConfStore.Store = mysqlConfStore
+		addSvcStore(enum.MySQLStore, SecretSvcIns.Store, ServerSvcIns.Store, ServerIpListSvcIns.Store, ConfSvcIns.Store)
 	case enum.PostGreSQLStore:
 		SecretSvcIns.Store = pgsqlSecretStore
 		ServerSvcIns.Store = pgsqlServerStore
-		ServerIpListSvcIns.Store = mysqlServerIpListStore
+		ServerIpListSvcIns.Store = pgsqlServerIpListStore
+		ConfSvcIns.Store = pgsqlConfStore
 
 		localSecretStore.Store = pgsqlSecretStore
 		localServerStore.Store = pgsqlServerStore
 		localServerIpListStore.Store = pgsqlServerIpListStore
-		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store, ServerSvcIns.Store, ServerIpListSvcIns.Store)
+		localConfStore.Store = pgsqlConfStore
+		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.Store, ServerSvcIns.Store, ServerIpListSvcIns.Store, ConfSvcIns.Store)
 	}
 
 	switch conf.Store.BackupStore {
@@ -72,24 +82,28 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 		SecretSvcIns.StoreBackup = mysqlSecretStore
 		ServerSvcIns.StoreBackup = mysqlServerStore
 		ServerIpListSvcIns.StoreBackup = mysqlServerIpListStore
-		addSvcStore(enum.MySQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup, ServerIpListSvcIns.StoreBackup)
+		ConfSvcIns.StoreBackup = mysqlConfStore
+		addSvcStore(enum.MySQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup, ServerIpListSvcIns.StoreBackup, ConfSvcIns.StoreBackup)
 	case enum.PostGreSQLStore:
 		SecretSvcIns.StoreBackup = pgsqlSecretStore
 		ServerSvcIns.StoreBackup = pgsqlServerStore
 		ServerIpListSvcIns.StoreBackup = pgsqlServerIpListStore
-		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup, ServerIpListSvcIns.StoreBackup)
+		ConfSvcIns.StoreBackup = pgsqlConfStore
+		addSvcStore(enum.PostGreSQLStore, SecretSvcIns.StoreBackup, ServerSvcIns.StoreBackup, ServerIpListSvcIns.StoreBackup, ConfSvcIns.StoreBackup)
 	}
 
 	memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, SecretSvcIns.Store, SecretSvcIns.StoreBackup)
 	memoryDependServerStoreArr = append(memoryDependServerStoreArr, ServerSvcIns.Store, ServerSvcIns.StoreBackup)
 	memoryDependServerIpListStoreArr = append(memoryDependServerIpListStoreArr, ServerIpListSvcIns.Store, ServerIpListSvcIns.StoreBackup)
+	memoryDependConfStoreArr = append(memoryDependConfStoreArr, ConfSvcIns.Store, ConfSvcIns.StoreBackup)
 
 	if conf.Store.IsEnableLocal {
 		memoryDependSecretStoreArr = append(memoryDependSecretStoreArr, localSecretStore)
 		memoryDependServerStoreArr = append(memoryDependServerStoreArr, localServerStore)
 		memoryDependServerIpListStoreArr = append(memoryDependServerIpListStoreArr, localServerIpListStore)
+		memoryDependConfStoreArr = append(memoryDependConfStoreArr, localConfStore)
 
-		loadAllStoreArr = append(loadAllStoreArr, localSecretStore, localServerStore, localServerIpListStore)
+		loadAllStoreArr = append(loadAllStoreArr, localSecretStore, localServerStore, localServerIpListStore, localConfStore)
 	}
 
 	if conf.Store.IsEnableMemory {
@@ -111,12 +125,18 @@ func Initialize(storeDetectionEventChan chan<- struct{}) {
 		}
 		ServerIpListSvcIns.StoreMemory = serverIpListMemory
 
-		loadAllStoreArr = append(loadAllStoreArr, secretMemory, serverMemory, serverIpListMemory)
+		ConfMemory := &memorystore.ConfStore{
+			Stores:                  memoryDependConfStoreArr,
+			StoreDetectionEventChan: storeDetectionEventChan,
+		}
+		ConfSvcIns.StoreMemory = ConfMemory
 
-		addSvcStore(enum.MemoryStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory, ServerIpListSvcIns.StoreMemory)
+		loadAllStoreArr = append(loadAllStoreArr, secretMemory, serverMemory, serverIpListMemory, ConfMemory)
+
+		addSvcStore(enum.MemoryStore, SecretSvcIns.StoreMemory, ServerSvcIns.StoreMemory, ServerIpListSvcIns.StoreMemory, ConfSvcIns.StoreMemory)
 	}
 
-	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc", "ServerIpListSvc")
+	log.Info("Service初始化完成:%s", "SecretSvc", "ServerSvc", "ServerIpListSvc", "ConfSvc")
 }
 
 func LoadAllData() {

@@ -27,8 +27,7 @@ func (s *ServerSvc) Add(ctx context.Context, p *param.ServerParam) error {
 		return err
 	}
 	if exists {
-		msg := fmt.Sprintf("服务%s已存在不能重复添加", p.Sign)
-		return otperr.ErrRepeatAdd(errors.New(msg))
+		return otperr.ErrRepeatAdd("服务%s已存在不能重复添加", p.Sign)
 	}
 	m, err := s.NewServerModel(p)
 	if err != nil {
@@ -119,20 +118,21 @@ func (s *ServerSvc) CheckModel(m *model.ServerModel, isDecrypt bool) error {
 		msg := fmt.Sprintf("服务数据校验不通过,疑似被篡改,请关注(ID:%d,sign:%s)", m.ID, m.Sign)
 		return otperr.ErrAccountSecretDataCheck(errors.New(msg))
 	}
-	if isDecrypt {
-		// 服务密钥
-		secret, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.Secret)
-		if err != nil {
-			return otperr.ErrDecrypt(err)
-		}
-		m.Secret = string(secret)
-		// 服务密钥IV
-		iv, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.IV)
-		if err != nil {
-			return otperr.ErrDecrypt(err)
-		}
-		m.IV = string(iv)
+	if !isDecrypt {
+		return nil
 	}
+	// 服务密钥
+	secret, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.Secret)
+	if err != nil {
+		return otperr.ErrDecrypt(err)
+	}
+	m.Secret = string(secret)
+	// 服务密钥IV
+	iv, err := crypt.Decrypt(cmd.P.RootKey192, cmd.P.IV, m.IV)
+	if err != nil {
+		return otperr.ErrDecrypt(err)
+	}
+	m.IV = string(iv)
 	return nil
 }
 
