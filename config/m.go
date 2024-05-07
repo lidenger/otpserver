@@ -8,6 +8,8 @@ type M struct {
 		ReqLimit             int    `toml:"reqLimit"`
 		AccessTokenValidHour int    `toml:"accessTokenValidHour"`
 		TimeTokenValidMinute int    `toml:"timeTokenValidMinute"`
+		Domain               string `toml:"domain"`
+		AdminLoginValidHour  int    `toml:"adminLoginValidHour"`
 	} `toml:"server"`
 	Log struct {
 		Level      string `toml:"level"`

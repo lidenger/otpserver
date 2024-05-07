@@ -1,5 +1,5 @@
 package enum
 
 const (
-	AdminPasswordKeyConf = "ADMIN_PASSWORD"
+	AdminPasswordKey = "ADMIN_PASSWORD"
 )

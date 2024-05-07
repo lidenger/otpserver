@@ -20,8 +20,7 @@ type Param struct {
 	IsInitMode      bool   // 初始化模式
 	IsInitAdminMode bool   // 初始化admin模式
 	AdminPassword   string // admin密码
-	IsToolMode      bool   // 工具模式
-	Encrypt         bool   // 工具模式-加密数据
+	IsEncryptMode   bool   // 加密模式
 	EncryptData     string // 工具模式-加密的源数据
 	ConfSource      string // 配置来源 nacos,local,default
 	ConfFile        string // 配置文件
@@ -41,13 +40,17 @@ var P *Param
 
 func InitParam() {
 	P = &Param{}
-	flag.BoolVar(&P.IsInitMode, "init", false, "系统初始化")
-	flag.BoolVar(&P.IsInitAdminMode, "admin", false, "初始化admin账号密码")
+	// 系统初始化模式 [-init]
+	flag.BoolVar(&P.IsInitMode, "init", false, "系统初始化模式")
+	// 初始化admin账号密码模式 [-admin -password "!234%abc"]
+	flag.BoolVar(&P.IsInitAdminMode, "admin", false, "初始化admin账号密码模式")
+	flag.StringVar(&P.AdminPassword, "password", "", "admin密码")
+	// 加密模式 [-encrypt -data "123"]
+	flag.BoolVar(&P.IsEncryptMode, "encrypt", false, "加密模式")
+	flag.StringVar(&P.EncryptData, "data", "", "加密数据")
+	// 配置文件
 	flag.StringVar(&P.ConfSource, "confSource", "default", "配置来源[nacos,local,default]")
 	flag.StringVar(&P.ConfFile, "confFile", "", "配置文件")
-	flag.BoolVar(&P.IsToolMode, "tool", false, "工具模式")
-	flag.BoolVar(&P.Encrypt, "encrypt", false, "工具模式-加密")
-	flag.StringVar(&P.EncryptData, "data", "", "工具模式-加密数据")
 	flag.StringVar(&P.AppKeyFile, "keyFile", "app.key", "系统启动KEY文件[app.key]")
 	flag.Parse()
 }
@@ -113,28 +116,4 @@ func AnalysisKeyFile(keyFile string) *Crypt {
 		panic("系统启动[app.key]文件不正确(数据校验不通过)")
 	}
 	return crypto
-}
-
-// ToolMode 工具模式
-func ToolMode() {
-	if !P.Encrypt {
-		return
-	}
-	if len(P.EncryptData) == 0 {
-		panic("加密模式没有提供加密数据,请使用[-data=\"xxx\"]提供加密数据")
-	}
-	data := []byte(P.EncryptData)
-	cipher, err := crypt.Encrypt(P.RootKey256, P.IV, data)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("数据:%s,加密后密文:%s", P.EncryptData, cipher)
-}
-
-// InitAdminMode 初始化admin账号密码(也可用于重置admin账号密码)
-func InitAdminMode() {
-	if !P.IsInitAdminMode {
-		return
-	}
-
 }

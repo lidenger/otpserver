@@ -8,6 +8,10 @@ reqLimit = 100
 accessTokenValidHour = 4
 # time token有效期(分钟)
 timeTokenValidMinute = 2
+# 服务域名(正式环境应该替换为相应的域名)
+domain="localhost"
+# admin登陆态有效期(小时)
+adminLoginValidHour = 12
 
 [log]
 # debug info error

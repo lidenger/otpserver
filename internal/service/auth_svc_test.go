@@ -29,7 +29,9 @@ func initP() {
 
 func initPFromLocalAppKeyFile() {
 	crypto := cmd.AnalysisKeyFile("H:/lidenger/otpserver/app.key")
-	cmd.P = &cmd.Param{}
+	if cmd.P == nil {
+		cmd.P = &cmd.Param{}
+	}
 	cmd.P.Crypt = crypto
 }
 

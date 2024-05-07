@@ -90,6 +90,15 @@ func ErrReqOverLimit(format string, arg ...any) IErr {
 	}
 }
 
+// ErrServer 服务异常
+func ErrServer(param any) IErr {
+	return &Err{
+		error:    wrapStrErr(param),
+		httpCode: http.StatusInternalServerError,
+		code:     code.ServerErr,
+	}
+}
+
 // ErrServerUnReady 服务未准备就绪
 func ErrServerUnReady(param any) IErr {
 	return &Err{
