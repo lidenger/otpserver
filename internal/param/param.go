@@ -43,8 +43,10 @@ type GenAccessTokenParam struct {
 }
 
 type SysConfParam struct {
-	ID  int64  `json:"id"`
-	Key string `json:"key"`
+	ID     int64  `json:"id"`
+	Key    string `json:"key"`
+	Val    string `json:"val"`
+	Remark string `json:"remark"`
 }
 
 type SysConfPagingParam struct {

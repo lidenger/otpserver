@@ -33,8 +33,7 @@ func (s *ServerIpListSvc) Add(ctx context.Context, p *param.ServerIpListParam) e
 		return err
 	}
 	if len(ips) != 0 {
-		msg := fmt.Sprintf("服务:%s,IP:%s已存在不能重复添加", p.Sign, p.IP)
-		return otperr.ErrRepeatAdd(msg)
+		return otperr.ErrRepeatAdd("服务:%s,IP:%s已存在不能重复添加", p.Sign, p.IP)
 	}
 	m := &model.ServerIpListModel{
 		ServerSign: p.Sign,

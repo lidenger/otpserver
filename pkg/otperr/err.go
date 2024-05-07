@@ -48,9 +48,10 @@ func ErrParamIllegal(param any) IErr {
 }
 
 // ErrRepeatAdd 重复添加
-func ErrRepeatAdd(err any) IErr {
+func ErrRepeatAdd(format string, arg ...any) IErr {
+	msg := fmt.Sprintf(format, arg)
 	return &Err{
-		error:    wrapStrErr(err),
+		error:    errors.New(msg),
 		httpCode: http.StatusBadRequest,
 		code:     code.ParamRepeatAdd,
 	}

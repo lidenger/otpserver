@@ -28,8 +28,7 @@ func (s *SecretSvc) Add(ctx context.Context, account string, isEnable uint8) err
 		return err
 	}
 	if exists {
-		msg := fmt.Sprintf("账号%s已存在不能重复添加", account)
-		return otperr.ErrRepeatAdd(errors.New(msg))
+		return otperr.ErrRepeatAdd("账号%s已存在不能重复添加", account)
 	}
 	// 创建一个新的model
 	m, err := s.NewSecretModel(account, isEnable)
