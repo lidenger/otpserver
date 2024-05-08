@@ -12,7 +12,7 @@
  Target Server Version : 160002 (160002)
  File Encoding         : 65001
 
- Date: 24/04/2024 12:13:45
+ Date: 08/05/2024 20:00:31
 */
 
 
@@ -54,6 +54,17 @@ CACHE 1;
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "public"."seq_otp_server_ip_whitelist";
 CREATE SEQUENCE "public"."seq_otp_server_ip_whitelist" 
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+
+-- ----------------------------
+-- Sequence structure for seq_otp_sys_conf
+-- ----------------------------
+DROP SEQUENCE IF EXISTS "public"."seq_otp_sys_conf";
+CREATE SEQUENCE "public"."seq_otp_sys_conf" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 9223372036854775807
@@ -109,7 +120,7 @@ COMMENT ON TABLE "public"."otp_operation_log" IS '操作日志';
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."otp_server";
 CREATE TABLE "public"."otp_server" (
-  "id" int8 NOT NULL DEFAULT nextval('seq_otp_account_secret'::regclass),
+  "id" int8 NOT NULL DEFAULT nextval('seq_otp_server'::regclass),
   "server_sign" varchar(100) COLLATE "pg_catalog"."default",
   "server_name" varchar(200) COLLATE "pg_catalog"."default",
   "server_secret_cipher" varchar(500) COLLATE "pg_catalog"."default",
@@ -157,6 +168,23 @@ COMMENT ON COLUMN "public"."otp_server_ip_whitelist"."update_time" IS '更新时
 COMMENT ON TABLE "public"."otp_server_ip_whitelist" IS '接入服务IP白名单';
 
 -- ----------------------------
+-- Table structure for otp_sys_conf
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."otp_sys_conf";
+CREATE TABLE "public"."otp_sys_conf" (
+  "id" int8 NOT NULL DEFAULT nextval('seq_otp_sys_conf'::regclass),
+  "sys_key" varchar(100) COLLATE "pg_catalog"."default",
+  "sys_val" varchar(500) COLLATE "pg_catalog"."default",
+  "remark" varchar(500) COLLATE "pg_catalog"."default",
+  "create_time" timestamp(6),
+  "update_time" timestamp(6)
+)
+;
+COMMENT ON COLUMN "public"."otp_sys_conf"."id" IS '主键自增ID';
+COMMENT ON COLUMN "public"."otp_sys_conf"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."otp_sys_conf"."update_time" IS '更新时间';
+
+-- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 SELECT setval('"public"."seq_otp_account_secret"', 1, false);
@@ -175,6 +203,11 @@ SELECT setval('"public"."seq_otp_server"', 1, false);
 -- Alter sequences owned by
 -- ----------------------------
 SELECT setval('"public"."seq_otp_server_ip_whitelist"', 1, false);
+
+-- ----------------------------
+-- Alter sequences owned by
+-- ----------------------------
+SELECT setval('"public"."seq_otp_sys_conf"', 1, false);
 
 -- ----------------------------
 -- Indexes structure for table otp_account_secret
@@ -220,3 +253,8 @@ CREATE INDEX "idx_otp_server_ip_whitelist_update_time" ON "public"."otp_server_i
 -- Primary Key structure for table otp_server_ip_whitelist
 -- ----------------------------
 ALTER TABLE "public"."otp_server_ip_whitelist" ADD CONSTRAINT "otp_server_ip_whitelist_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table otp_sys_conf
+-- ----------------------------
+ALTER TABLE "public"."otp_sys_conf" ADD CONSTRAINT "otp_sys_conf_pkey" PRIMARY KEY ("id");

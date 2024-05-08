@@ -9,9 +9,15 @@ import (
 )
 
 // HmacDigest hmac数据摘要
-func HmacDigest(key []byte, data string) string {
+func HmacDigest(key []byte, param any) string {
 	h := hmac.New(sha256.New, key)
-	h.Write([]byte(data))
+	var data []byte
+	if t1, ok := param.(string); ok {
+		data = []byte(t1)
+	} else if t2, ok2 := param.([]byte); ok2 {
+		data = t2
+	}
+	h.Write(data)
 	digested := h.Sum(nil)
 	return hex.EncodeToString(digested)
 }

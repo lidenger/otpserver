@@ -1,6 +1,12 @@
 package crypt
 
-import "testing"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"os"
+	"testing"
+)
 
 var (
 	key128 = []byte("1234567890123456")
@@ -52,4 +58,18 @@ func TestEncryptAndDecrypt256(t *testing.T) {
 	if string(origin) != data {
 		t.Fatalf("加解密测试失败，期望:%s,实际:%s", data, string(origin))
 	}
+}
+
+func TestHmacDigest(t *testing.T) {
+	files := []string{"linux-amd64.zip", "macos-amd64.zip", "macos-arm64.zip", "windows-amd64.zip"}
+	for _, file := range files {
+		content, err := os.ReadFile("../../doc/download/" + file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		digested := sha256.Sum256(content)
+		hexStr := hex.EncodeToString(digested[:])
+		fmt.Printf("%s: %s\n", file, hexStr)
+	}
+
 }
