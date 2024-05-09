@@ -36,7 +36,7 @@ func recursionDecrypt(typ reflect.Type, val reflect.Value, tomlTag string) {
 	// 不是结构体，结束递归
 	if val.Kind().String() != "struct" {
 		// 解密
-		if strings.Contains(tomlTag, "@cipher") {
+		if strings.Contains(tomlTag, "@cipher") && len(val.String()) > 0 {
 			key := cmd.P.RootKey256
 			iv := cmd.P.IV
 			data, err := crypt.Decrypt(key, iv, val.String())

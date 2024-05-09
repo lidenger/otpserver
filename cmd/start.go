@@ -49,7 +49,7 @@ func InitParam() {
 	flag.BoolVar(&P.IsEncryptMode, "encrypt", false, "加密模式")
 	flag.StringVar(&P.EncryptData, "data", "", "加密数据")
 	// 配置文件
-	flag.StringVar(&P.ConfSource, "confSource", "default", "配置来源[nacos,local,default]")
+	flag.StringVar(&P.ConfSource, "confSource", "local", "配置来源[nacos,local,default]")
 	flag.StringVar(&P.ConfFile, "confFile", "", "配置文件")
 	flag.StringVar(&P.AppKeyFile, "keyFile", "app.key", "系统启动KEY文件[app.key]")
 	flag.Parse()

@@ -1,7 +1,7 @@
 [server]
 env = "dev"
 port = 8066
-rootPath = "g:/otpserver"
+rootPath = "./otpwork"
 # 限速QPS
 reqLimit = 100
 # access token有效期(小时)
@@ -9,7 +9,7 @@ accessTokenValidHour = 4
 # time token有效期(分钟)
 timeTokenValidMinute = 2
 # 服务域名(正式环境应该替换为相应的域名)
-domain="localhost"
+domain = "localhost"
 # admin登陆态有效期(小时)
 adminLoginValidHour = 12
 
@@ -29,8 +29,8 @@ maxAge = 30
 compress = true
 
 [store]
-mainStore = "mysql"
-backupStore = "pgsql"
+mainStore = "mysql" # 当前可选: mysql,pgsql
+backupStore = "" # 当前可选: "",mysql,pgsql
 rootPath = "/store/"
 # 是否启用本地存储（数据冗余一份到本地磁盘） true | false
 isEnableLocal = true
@@ -57,5 +57,5 @@ connMaxWaitTime = "20s"
 host = "127.0.0.1"
 port = "5432"
 userName = "postgres"
-"password@cipher" = "ac1b926895e6982a7060f1ca10248659"
+"password@cipher" = ""
 dbName = "otp"

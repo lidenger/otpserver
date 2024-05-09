@@ -61,15 +61,17 @@ func TestEncryptAndDecrypt256(t *testing.T) {
 }
 
 func TestHmacDigest(t *testing.T) {
-	files := []string{"linux-amd64.zip", "macos-amd64.zip", "macos-arm64.zip", "windows-amd64.zip"}
+	files := []string{"otpserver-linux-amd64.zip", "otpserver-macos-amd64.zip", "otpserver-macos-arm64.zip", "otpserver-windows-amd64.zip"}
 	for _, file := range files {
 		content, err := os.ReadFile("../../doc/download/" + file)
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		digested := sha256.Sum256(content)
 		hexStr := hex.EncodeToString(digested[:])
-		fmt.Printf("%s: %s\n", file, hexStr)
+		size := float64(len(content)) / 1024 / 1024
+		fmt.Printf("%s:%.1fMB | %s\n", file, size, hexStr)
 	}
 
 }
