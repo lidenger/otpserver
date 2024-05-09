@@ -84,7 +84,6 @@ macos_arm64_zip:
 	rm -rf $(TARGET_MACOS_ARM_DIR)
 
 
-
 TARGET_MACOS_AMD_DIR = $(DOWNLOAD_DIR)/macos-amd64
 TARGET_MACOS_AMD_ZIP = $(DOWNLOAD_DIR)/macos-amd64.zip
 
