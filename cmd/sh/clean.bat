@@ -11,8 +11,8 @@ if exist app.log (del /f app.log)
 if exist request.log (del /f request.log)
 if exist app.key (del /f app.key)
 if exist app.toml (del /f app.toml)
-
 if exist nacos.toml (del /f nacos.toml)
+if exist otpwork (rmdir /s /q otpwork)
 
 echo clear up tmp file finish
 
