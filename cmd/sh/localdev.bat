@@ -10,5 +10,8 @@ cd ..
 if exist app.key (echo app.key exists) else (copy .\config\localdev\app.key app.key)
 if exist app.toml (echo app.toml exists) else (copy .\config\serverconf\app.toml app.toml)
 if exist nacos.toml (echo app.key exists) else (copy .\config\localdev\nacos.toml nacos.toml)
-
+go env -w GOOS=windows
+cd cmd
+cd main
+go build -ldflags "-s -w" -o ../../app.exe .
 echo finish
