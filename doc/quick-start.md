@@ -21,7 +21,7 @@ wget https://github.com/lidenger/otpserver/raw/main-doc/doc/download/otpserver-l
 
 ### 解压
 
-1. 解压（这里以linux为例）
+#### 1. 解压（这里以linux为例）
 
 ```shell
 unzip linux-amd64.zip
@@ -33,7 +33,7 @@ unzip linux-amd64.zip
 -rw-r--r-- 1 root root  11K May  8 20:04 pgsql-otp.sql
 ```
 
-2. app文件授权可执行：(Windows系统解压即可执行，无需操作)
+#### 2. app文件授权可执行：(Windows系统解压即可执行，无需操作)
 
 ```shell
 chmod +x app
@@ -42,7 +42,7 @@ chmod +x app
 ...
 ```
 
-3. 文件说明
+#### 3. 文件说明
 
 - app 可执行文件
 - app.toml 系统启动配置文件，如果从Nacos配置中心启动可删除该文件
@@ -64,7 +64,7 @@ MySQL信息如下:
 密码：12345678
 ```
 
-1. 创建数据库
+#### 1. 创建数据库
 
 ```text
 数据库名：otp
@@ -72,8 +72,9 @@ MySQL信息如下:
 排序规则：utf8mb4_general_ci
 ```
 
-2. 在otp库执行mysql-otp.sql创建表结构
-3. 系统初始化
+#### 2. 在otp库执行mysql-otp.sql创建表结构
+
+#### 3. 系统初始化
 
 ```shell
 ./app -init
@@ -81,7 +82,7 @@ MySQL信息如下:
 ## 系统启动文件[app.key]在当前目录生成完成，该文件为敏感文件请妥善保管
 ```
 
-4. 更新MySQL相关配置
+#### 4. 更新MySQL相关配置
 
 - 加密数据库密码
 
@@ -103,7 +104,7 @@ dbName = "otp"
 ...
 ```
 
-5. 初始化admin管理后台账号密码
+#### 5. 初始化admin管理后台账号密码
 
 ```shell
 ./app -admin -password "123456"
@@ -111,7 +112,7 @@ dbName = "otp"
 ##Admin账号密码更新成功,账号:admin,密码:123456
 ```
 
-6. 修改服务域名配置
+#### 6. 修改服务域名配置
 
 ```shell
 [server]
@@ -122,7 +123,7 @@ domain = "otpserver.com"
 ...
 ```
 
-7. 启动服务
+#### 7. 启动服务
 
 ```shell
 ./app
@@ -130,7 +131,8 @@ domain = "otpserver.com"
 ##{"level":"info","time":"2024-05-09 20:29:41","caller":"log/config.go:49","func":"github.com/lidenger/otpserver/config/log.Info","msg":"Http服务已启动,端口:[8066]"}
 ```
 
-8. 浏览器输入配置的域名登陆管理后台 <br>
-   <img src="res/login.png"><br>
-   <img src="res/secret.png"> <br>
-   <img src="res/server.png">
+#### 8. 浏览器输入配置的域名登陆管理后台
+
+<img src="res/login.png"><br>
+<img src="res/secret.png"> <br>
+<img src="res/server.png">

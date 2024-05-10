@@ -1,5 +1,4 @@
 [server]
-env = "dev"
 port = 8066
 rootPath = "./otpwork"
 # 限速QPS

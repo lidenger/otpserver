@@ -2,7 +2,6 @@ package config
 
 type M struct {
 	Server struct {
-		Env                  string `toml:"env"`
 		Port                 int    `toml:"port"`
 		RootPath             string `toml:"rootPath"`
 		ReqLimit             int    `toml:"reqLimit"`
