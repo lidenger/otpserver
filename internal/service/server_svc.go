@@ -11,6 +11,7 @@ import (
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"github.com/lidenger/otpserver/pkg/otperr"
 	"github.com/lidenger/otpserver/pkg/util"
+	"time"
 )
 
 type ServerSvc struct {
@@ -66,6 +67,7 @@ func (s *ServerSvc) NewServerModel(p *param.ServerParam) (*model.ServerModel, er
 	}
 	m.Secret = secretCipher
 	// 服务密钥IV
+	time.Sleep(100 * time.Millisecond)
 	iv := util.Generate16Str()
 	ivCipher, err := crypt.Encrypt(cmd.P.RootKey192, cmd.P.IV, []byte(iv))
 	if err != nil {
