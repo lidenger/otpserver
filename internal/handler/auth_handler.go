@@ -66,7 +66,7 @@ func VerifyAccessToken(c *gin.Context) {
 
 // 验证服务sign
 func verifySign(c *gin.Context, serverSign string) (bool, *model.ServerModel) {
-	s, err := service.ServerSvcIns.GetBySign(c, serverSign, false)
+	s, err := service.ServerSvcIns.GetBySign(c, serverSign, true)
 	if err != nil {
 		result.R(c, err, "")
 		return false, nil
@@ -84,25 +84,30 @@ func verifySign(c *gin.Context, serverSign string) (bool, *model.ServerModel) {
 
 // VerifyTimeToken 验证客户端时间token
 func VerifyTimeToken(c *gin.Context, timeToken string, m *model.ServerModel) bool {
-	key := []byte(m.Secret)
-	iv := []byte(m.IV)
-	t, err := crypt.Decrypt(key, iv, timeToken)
-	if err != nil {
-		result.ParamErr(c, "timeToken不正确:"+err.Error())
-		return false
-	}
-	clientTime, err := strconv.Atoi(string(t))
-	if err != nil {
-		result.ParamErr(c, "timeToken不正确:"+err.Error())
-		return false
-	}
-	// 检测时间误差
 	conf := serverconf.GetSysConf()
-	validMinute := float64(conf.Server.TimeTokenValidMinute)
-	if math.Abs(float64(int64(clientTime)-time.Now().Unix())) > (validMinute * 60) {
-		msg := fmt.Sprintf("timeToken不正确,和服务端时间差大于%f分钟,client time:%d,server time:%d", validMinute, clientTime, time.Now().Unix())
+	msg := verifyTimeTokenInner(timeToken, m.Secret, m.IV, conf.Server.TimeTokenValidMinute)
+	if msg == "" {
+		return true
+	} else {
 		result.ParamErr(c, msg)
 		return false
 	}
-	return true
+}
+
+func verifyTimeTokenInner(timeToken string, key, iv string, timeTokenValidMinute int) string {
+	t, err := crypt.Decrypt([]byte(key), []byte(iv), timeToken)
+	if err != nil {
+		return "timeToken不正确:" + err.Error()
+	}
+	clientTime, err := strconv.Atoi(string(t))
+	if err != nil {
+		return "timeToken不正确:" + err.Error()
+	}
+	// 检测时间误差
+	validMinute := float64(timeTokenValidMinute)
+	if math.Abs(float64(int64(clientTime)-time.Now().Unix())) > (validMinute * 60) {
+		msg := fmt.Sprintf("timeToken不正确,和服务端时间差大于%f分钟,client time:%d,server time:%d", validMinute, clientTime, time.Now().Unix())
+		return msg
+	}
+	return ""
 }
