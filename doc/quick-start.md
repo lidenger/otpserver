@@ -133,6 +133,6 @@ domain = "otpserver.com"
 
 #### 8. 浏览器输入配置的域名登陆管理后台
 
-<img src="res/login.png"><br>
-<img src="res/secret.png"> <br>
-<img src="res/server.png">
+<img src="res/login.png" alt="登录页面"><br>
+<img src="res/secret.png" alt="账号密钥页面"> <br>
+<img src="res/server.png" alt="接入服务页面">
