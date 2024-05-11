@@ -109,7 +109,7 @@ dbName = "otp"
 ```shell
 ./app -admin -password "123456"
 
-##Admin账号密码更新成功,账号:admin,密码:123456
+##Admin账号密码创建成功,账号:admin,密码:123456
 ```
 
 #### 6. 修改服务域名配置

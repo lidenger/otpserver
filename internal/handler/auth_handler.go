@@ -46,7 +46,7 @@ func VerifyAccessToken(c *gin.Context) {
 	// 缓存中存在，验证通过
 	tokenM := service.GetAccessTokenInCache(accessToken)
 	if tokenM != nil {
-		result.R(c, nil, "1")
+		result.R(c, nil, "")
 		return
 	}
 	tokenM, err := service.AnalysisAccessToken(accessToken)
@@ -61,7 +61,7 @@ func VerifyAccessToken(c *gin.Context) {
 	}
 	// 验证生效记录到缓存中
 	service.AddAccessTokenToCache(accessToken, tokenM)
-	result.R(c, nil, "1")
+	result.R(c, nil, "")
 }
 
 // 验证服务sign
