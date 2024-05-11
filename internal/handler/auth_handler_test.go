@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"github.com/lidenger/otpserver/pkg/crypt"
 	"io"
 	"net/http"
@@ -47,9 +48,10 @@ func TestVerifyTimeToken(t *testing.T) {
 	}
 }
 
-func getAccessToken(key, iv string) (string, error) {
-
-	return "", nil
+type Result struct {
+	Code int    `json:"code"`
+	Data string `json:"data"`
+	Msg  string `json:"msg"`
 }
 
 func TestRequestAccessToken(t *testing.T) {
@@ -57,9 +59,25 @@ func TestRequestAccessToken(t *testing.T) {
 	// 服务密钥和IV
 	key := "0c8441ba0ec011efbb1e2cf05daf3fe5"
 	iv := "0c8441ba0ec011ef"
-	timeToken, err := genTimeToken(key, iv)
+	accessToken, err := getAccessToken(url, key, iv)
 	if err != nil {
 		t.Fatal(err)
+	}
+	t.Logf("access_token: %s", accessToken)
+	// 验证access token
+	verifyUrl := "http://127.0.0.1:8066/v1/access-token/verify"
+	err = verifyAccessToken(verifyUrl, accessToken)
+	if err != nil {
+		t.Fatal(err)
+	} else {
+		t.Logf("access_token验证成功: %s", accessToken)
+	}
+}
+
+func getAccessToken(url, key, iv string) (string, error) {
+	timeToken, err := genTimeToken(key, iv)
+	if err != nil {
+		return "", err
 	}
 	params := make(map[string]string)
 	params["serverSign"] = "server1"
@@ -67,14 +85,40 @@ func TestRequestAccessToken(t *testing.T) {
 
 	jsonParams, err := json.Marshal(params)
 	if err != nil {
-		t.Fatal(err)
+		return "", err
 	}
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonParams))
 	if err != nil {
-		t.Fatal(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	t.Log(string(body))
+	result := &Result{}
+	err = json.Unmarshal(body, result)
+	if err != nil {
+		return "", err
+	}
+	if result.Code != 200000 {
+		return "", errors.New(result.Msg)
+	} else {
+		return result.Data, nil
+	}
+}
 
+func verifyAccessToken(baseUrl, accessToken string) error {
+	// 验证access token
+	fullUrl := baseUrl + "?accessToken=" + accessToken
+	resp, err := http.Get(fullUrl)
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	result := &Result{}
+	err = json.Unmarshal(body, result)
+	if err != nil {
+		return err
+	}
+	if result.Code != 200000 {
+		return errors.New(result.Msg)
+	} else {
+		return nil
+	}
 }

@@ -13,8 +13,8 @@ otpserver围绕着一次性密码功能搭建的完整的服务，特点：
 <img src="/doc/res/system.png" alt="otpserver系统架构图"/>
 
 ## 开始使用
-[快速开始](doc%2Fquick-start.md)
-[配置详情](doc%2Fconfig-detail.md)
+- [快速开始](doc%2Fquick-start.md)
+- [配置详情](doc%2Fconfig-detail.md)
 
 ## 外部服务接入
 [接入详情](doc%2Fexternal-server.md)
