@@ -78,5 +78,5 @@ go env -w CGO_ENABLED=0 GOOS=windows GOARCH=amd64
 REM 执行SHA256 test计算data check
 cd pkg
 cd crypt
-go test -run TestHmacDigest
+go test -run TestGenDownloadContent
 echo 记得替换doc里面的SHA256 data check
