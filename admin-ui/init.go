@@ -41,4 +41,11 @@ func Initialize(g *gin.Engine) {
 		_, _ = c.Writer.Write(b)
 		c.Writer.Flush()
 	})
+
+	g.GET("/otpserver.png", func(c *gin.Context) {
+		c.Writer.WriteHeader(200)
+		b, _ := staticFS.ReadFile("static/otpserver.png")
+		_, _ = c.Writer.Write(b)
+		c.Writer.Flush()
+	})
 }
