@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lidenger/otpserver/internal/param"
 	"github.com/lidenger/otpserver/internal/service"
@@ -23,6 +24,20 @@ func GetAccountSecret(ctx *gin.Context) {
 	account := ctx.Param("account")
 	model, err := service.SecretSvcIns.GetByAccount(ctx, account, true)
 	result.R(ctx, err, model)
+}
+
+// GetQRCodeContent 获取添加密钥二维码内容
+// https://github.com/google/google-authenticator/wiki/Key-Uri-Format
+func GetQRCodeContent(ctx *gin.Context) {
+	account := ctx.Param("account")
+	model, err := service.SecretSvcIns.GetByAccount(ctx, account, true)
+	if err != nil {
+		result.R(ctx, err, "")
+		return
+	}
+	// otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example
+	content := fmt.Sprintf("otpauth://totp/%s?secret=%s&issuer=%s", account, model.SecretSeed, "otpserver")
+	result.R(ctx, nil, content)
 }
 
 func PagingAccountSecret(ctx *gin.Context) {

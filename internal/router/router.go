@@ -32,6 +32,7 @@ func api(g *gin.Engine) {
 			secretv1.GET("/valid", handler.ValidCode)          // 验证动态令牌
 			secretv1.POST("", handler.AddAccountSecret)        // 新增账号密钥 POST /v1/secret
 			secretv1.GET(":account", handler.GetAccountSecret) // 获取指定账号密钥 GET /v1/secret/zhangsan
+			secretv1.GET(":account/qrcode-content", handler.GetQRCodeContent)
 		}
 
 		adminv1 := v1.Group("/admin") // 管理平台
@@ -42,6 +43,7 @@ func api(g *gin.Engine) {
 			adminv1Secret := adminv1.Group("/secret") // 账号密钥
 			{
 				adminv1Secret.GET(":account", handler.GetAccountSecret)
+				adminv1Secret.GET(":account/qrcode-content", handler.GetQRCodeContent)
 				adminv1Secret.GET("/paging", handler.PagingAccountSecret)
 				adminv1Secret.POST("", handler.AddAccountSecret)
 				adminv1Secret.PUT("/enable", handler.SetSecretEnable)
