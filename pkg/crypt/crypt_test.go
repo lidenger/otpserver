@@ -73,5 +73,31 @@ func TestHmacDigest(t *testing.T) {
 		size := float64(len(content)) / 1024 / 1024
 		fmt.Printf("%s:%.1fMB | %s\n", file, size, hexStr)
 	}
+}
 
+type downloadM struct {
+	filename string
+	os       string
+	cpu      string
+	size     string
+	sum      string
+}
+
+func TestGenDownloadContent(t *testing.T) {
+	itmes := []downloadM{
+		{"otpserver-linux-amd64.zip", "Linux", "x86-64", "", ""},
+		{"otpserver-macos-amd64.zip", "macOS", "x86-64", "", ""},
+		{"otpserver-macos-arm64.zip", "macOS", "M系列", "", ""},
+		{"otpserver-windows-amd64.zip", "Windows", "x86-64", "", ""},
+	}
+	for _, item := range itmes {
+		content, err := os.ReadFile("../../doc/download/" + item.filename)
+		if err != nil {
+			t.Fatal(err)
+		}
+		digested := sha256.Sum256(content)
+		item.sum = hex.EncodeToString(digested[:])
+		item.size = fmt.Sprintf("%.1fMB", float64(len(content))/1024/1024)
+		fmt.Printf("| [%s](download/%s)     | %s   | %s | %s | %s | \n", item.filename, item.filename, item.os, item.cpu, item.size, item.sum)
+	}
 }

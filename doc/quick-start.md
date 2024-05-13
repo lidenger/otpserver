@@ -8,10 +8,10 @@
 
 | 文件                                                | 系统      | CPU架构  | 大小     | SHA256 Checksum                                                  |
 |:--------------------------------------------------|:--------|:-------|:-------|:-----------------------------------------------------------------|
-| [linux-amd64.zip](download%2Flinux-amd64.zip)     | Linux   | x86-64 | 10.9MB | 36b80f49fc2bd4566a859c6bb7e78bc98066c5ddece91c98182f3c36909bba47 |
-| [macos-amd64.zip](download%2Fmacos-amd64.zip)     | macOS   | x86-64 | 11.4MB | d41b69628405830b81961b75226560cfeaca279eb158de0e83fc7bdb01eed801 |
-| [macos-arm64.zip](download%2Fmacos-arm64.zip)     | macOS   | M系列    | 11.0MB | 46271e857f9b137e6515067154a3a10846ae9cafd6c0a540cac32f5e45a72e93 |
-| [windows-amd64.zip](download%2Fwindows-amd64.zip) | Windows | x86-64 | 11.0MB | 7048bd01d5783271daa0ad9c3957d6a7b1ced209d787204e8089bd5324fe5a5f |
+| [otpserver-linux-amd64.zip](download/otpserver-linux-amd64.zip)     | Linux   | x86-64 | 11.0MB | 4a9dfd226f83266352882b0a50fe4935d91824ae7d488274d6f6e6625e5f3afa | 
+| [otpserver-macos-amd64.zip](download/otpserver-macos-amd64.zip)     | macOS   | x86-64 | 11.4MB | 08b4a172380c987019e1e438c9b0884e37613c470cf45c63cdbcbde46620bbeb | 
+| [otpserver-macos-arm64.zip](download/otpserver-macos-arm64.zip)     | macOS   | M系列 | 11.1MB | f514bc160f067b93663df8772ff7d4d85b4faf39df7037e11eff5f8430c401d5 | 
+| [otpserver-windows-amd64.zip](download/otpserver-windows-amd64.zip)     | Windows   | x86-64 | 11.0MB | 524f99f58bad10c0e0277ea5c55eef6351ac77ff8b4f68bf55f40531277066be | 
 
 示例：wget下载
 
