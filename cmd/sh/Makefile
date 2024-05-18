@@ -1,8 +1,7 @@
 .PHONY: clean
 clean:
 	rm -f ../../app
-	rm -f ../../app.log
-	rm -f ../../request.log
+	rm -rf ../../otpwork
 	rm -f ../../app.key
 	rm -f ../../app.toml
 	rm -f ../../nacos.toml

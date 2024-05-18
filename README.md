@@ -20,6 +20,17 @@ otpserver围绕着一次性密码功能搭建的完整的服务，特点：
 [接入详情](doc%2Fexternal-server.md)
 
 
+## 监控-Prometheus
+- otp_server_http_req_total  : http请求总次数
+- otp_server_http_limit_req_total : http请求超限总次数
+- otp_server_http_req_cost_gauge : http请求耗时，单位：毫秒
+- otp_server_http_cost_histogram : http请求耗时分布，单位：毫秒
+- otp_server_http_response_code_histogram : http响应状态码
+- otp_server_store_mysql_health_gauge : mysql存储健康状态
+- otp_server_store_pgsql_health_gauge : pgsql存储健康状态
+- otp_server_store_local_health_gauge : 本地存储健康状态
+- otp_server_store_memory_health_gauge : 内存存储健康状态
+
 
 
 
