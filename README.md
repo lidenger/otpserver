@@ -40,18 +40,19 @@ logDir = "/nacos/log/"
 cacheDir = "/nacos/cache/"
 logLevel = "info"
 isListenChange = true
-## server1
+# server1
 [[server]]
 ip = "127.0.0.1"
 port = 8848
 contextPath = "/nacos"
 
-## server 2
+# server 2
 #[[server]]
 #ip = "127.0.0.1"
 #port = 8848
 #contextPath = "/nacos"
 ```
+
 3. 从nacos启动服务
 ```shell
 ./app --confSource nacos
