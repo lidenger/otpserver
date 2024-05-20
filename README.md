@@ -16,6 +16,47 @@ otpserver围绕着一次性密码功能搭建的完整的服务，特点：
 - [快速开始](doc%2Fquick-start.md)
 - [配置详情](doc%2Fconfig-detail.md)
 
+#### 启动方式
+- 启动方式1：本地启动
+```shell
+# 方式一 （默认本地启动）
+./app
+
+# 方式二 （本地启动并指定配置文件路径）
+./app --confSource local --confFile /etc/conf/app.toml
+```
+
+- 启动方式2：配置中心Nacos启动
+1. 将app.toml文件内容配置到Nacos Server端
+<img src="/doc/res/nacos_conf.png" alt="Nacos Server配置"/>
+2. Nacos配置文件
+```toml
+[client]
+namespaceId = ""
+dataId = "otpserverv1"
+group = "DEFAULT_GROUP"
+timeoutMs = 5000
+logDir = "/nacos/log/"
+cacheDir = "/nacos/cache/"
+logLevel = "info"
+isListenChange = true
+## server1
+[[server]]
+ip = "127.0.0.1"
+port = 8848
+contextPath = "/nacos"
+
+## server 2
+#[[server]]
+#ip = "127.0.0.1"
+#port = 8848
+#contextPath = "/nacos"
+```
+3. 从nacos启动服务
+```shell
+./app --confSource nacos
+```
+
 ## 外部服务接入
 [接入详情](doc%2Fexternal-server.md)
 
