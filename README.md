@@ -29,6 +29,7 @@ otpserver围绕着一次性密码功能搭建的完整的服务，特点：
 - 启动方式2：配置中心Nacos启动
 1. 将app.toml文件内容配置到Nacos Server端
 <img src="/doc/res/nacos_conf.png" alt="Nacos Server配置"/>
+
 2. Nacos配置文件
 ```toml
 [client]
@@ -45,12 +46,6 @@ isListenChange = true
 ip = "127.0.0.1"
 port = 8848
 contextPath = "/nacos"
-
-# server 2
-#[[server]]
-#ip = "127.0.0.1"
-#port = 8848
-#contextPath = "/nacos"
 ```
 
 3. 从nacos启动服务
